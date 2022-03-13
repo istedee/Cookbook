@@ -3,7 +3,7 @@ from sqlite3 import IntegrityError
 from flask import url_for, Response, request
 from flask_restful import Api, Resource
 from sqlalchemy import null
-from database.models import Recipe, User
+from database.models import Ingredient, Recipe, Recipeingredient, Unit, User
 from .. import db
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
@@ -218,7 +218,7 @@ class RecipeCollection(Resource):
         return Response(
             status=201,
             mimetype=MASON,
-            headers={"Location": Api.url_for(RecipeItem, recipe=p_name)}
+            headers={"Location": url_for("recipeitem", recipe=new_recipe.name)}
         )
 
 class UserRecipeCollection(Resource):
@@ -249,55 +249,28 @@ class UserRecipeCollection(Resource):
             response=json.dumps(build, indent=4, separators=(',', ': '), sort_keys=True),
             mimetype=MASON)
 
-    def post(self):
-        if request.json == None:
-            return create_error_response(415, "BAD CONTENT", "MUST BE JSON")
-        try:
-            validate(
-                request.json,
-                Recipe.json_schema(),
-                format_checker=draft7_format_checker
-            )
-        except ValidationError as e:
-            return create_error_response(
-                400,
-                "Invalid JSON",
-                str(e))
-        try:
-            p_name = request.json["name"]
-            recipe_name = Recipe.query.filter_by(name=p_name).first()
-            if recipe_name:
-                return create_error_response(409, "ON JO", "Duplicate 🥝")
-            p_weight = request.json["description"]
-            if not isinstance(p_weight, str):
-                return create_error_response(400, "Invalid values")
-        except KeyError:
-            return create_error_response(400, "KeyError")
-        try:
-            new_recipe = Recipe(
-            name=p_name,
-            description=p_weight,
-            )
-            db.session.add(new_recipe)
-            db.session.commit()
-        except IntegrityError:
-            return create_error_response(409, "Duplicate", "Database error")
-
-        return Response(
-            status=201,
-            mimetype=MASON,
-            headers={"Location": Api.url_for(RecipeItem, recipe=p_name)}
-        )
-
 class RecipeItem(Resource):
     
     def get(self, recipe):
-        recipe_item = db.session.query(Recipe).filter_by(name=recipe.name).first()
+        recipe_name = db.session.query(Recipe).filter_by(name=recipe.name).first()
+        print(recipe_name.name)
+        recipe_item = db.session.query(Ingredient.name, Recipeingredient.amount, Unit.unit).filter(Recipeingredient.ingredient_id == Ingredient.id
+        ).filter(
+            Recipeingredient.id == recipe.id
+        ).filter(
+            Unit.id == Recipeingredient.unit_id
+        ).all()
         if recipe_item == None:
             return create_error_response(404, "Ei oo", "No recipe_item")
+        ingredients = []
+        for row in recipe_item:
+            ingredients.append(row)
+        print(ingredients)
         data = RecipeBuilder(
-            name=recipe_item.name,
-            description=recipe_item.description
+            name=recipe_name.name,
+            description=recipe_name.description,
+            ingredients=ingredients,
+
         )
         data.add_namespace("storage", LINK_RELATIONS_URL)
         data.add_control("self", url_for("recipeitem", recipe=recipe.name))
@@ -315,6 +288,7 @@ class RecipeItem(Resource):
         try:
             recipe_item.name = request.json["name"]
             recipe_item.description = request.json["description"]
+
         except TypeError:
             return create_error_response(415, "Wrong content", "Should be JSON")
         except KeyError:
