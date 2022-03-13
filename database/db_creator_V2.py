@@ -4,7 +4,7 @@ from sqlite3 import IntegrityError
 
 def populate_db():
     new_user = models.User(
-                name="Taneli Testiukko",
+                name="Taneli-Testiukko",
                 email="testi.testi@testi.com",
                 password="EeppinenPassuJokaonTurvallinen"
             )

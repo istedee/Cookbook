@@ -20,7 +20,7 @@ class Recipeingredients(Resource):
                     ingredient.name,
 #                    recipe.amount_id,
 #                    recipe.unit_id
-                ] for ingredient in db.session.query(Ingredient).filter(Recipeingredient.id==Ingredient.id).order_by(Recipeingredient.id).all()]
+                ] for ingredient in db.session.query(Ingredient).filter(Recipeingredient.ingredient_id==Ingredient.id).order_by(Recipeingredient.id).all()]
         } for item in inventory]
         if emt == []:
             emt = "EI VITTU LÖYDY MITÄÄN!!!"

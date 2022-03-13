@@ -19,11 +19,22 @@ def create_app():
 
         from . import models
         from .api_routes import recipe_route, populate_route, ingredient_route, user_route, recipe_ingredients
-        from database.builders.builders import RecipeBuilder, RecipeConverter, RecipeItem, RecipeCollection
+        from database.builders.builders import RecipeBuilder, RecipeConverter, RecipeItem, RecipeCollection, UserConverter, UserRecipe, UserRecipeCollection
 
         db.create_all()  # Create database tables for our data models
 
         api = Api(app)
+
+        api.add_resource(populate_route.Populate, "/api/populate")
+        api.add_resource(ingredient_route.Ingredients, "/api/ingredients")
+        api.add_resource(user_route.UserCollection, "/api/users")
+        api.add_resource(recipe_ingredients.Recipeingredients, "/api/recipeingredients")
+        api.add_resource(RecipeCollection, "/api/recipes/")
+        app.url_map.converters["recipe"] = RecipeConverter
+        app.url_map.converters["user"] = UserConverter
+        api.add_resource(RecipeItem, "/api/recipes/<recipe:recipe>/")
+        api.add_resource(UserRecipeCollection, "/api/<user:user>/")
+        api.add_resource(UserRecipe, "/api/<user:user>/<recipe:recipe>/")
 
         @app.route("/api/")
         def view():
@@ -31,14 +42,12 @@ def create_app():
             bob.add_control_recipes_all()
             return json.dumps(bob)
 
-#        api.add_resource(recipe_route.Recipes, "/api/recipes")
-        api.add_resource(populate_route.Populate, "/api/populate")
-        api.add_resource(ingredient_route.Ingredients, "/api/ingredients")
-        api.add_resource(user_route.UserCollection, "/api/users")
-        api.add_resource(recipe_ingredients.Recipeingredients, "/api/recipeingredients")
-        api.add_resource(RecipeCollection, "/api/recipes/")
-        app.url_map.converters["recipe"] = RecipeConverter
+        @app.route("/profiles/<profile_name>")
+        def redirect_to_profile(profile_name):
+            pass
 
-        api.add_resource(RecipeItem, "/api/recipes/<recipe:recipe>/")
+        @app.route("/storage/link-relations/")
+        def send_link_relations_html():
+            return "here be link relations"
 
         return app

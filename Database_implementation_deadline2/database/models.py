@@ -9,9 +9,9 @@ class Recipeingredient(db.Model):
     amount = Column(Integer)
     unit_id = Column(Integer, ForeignKey('unit.id'), primary_key=True)
 
-    recipe_rel = relationship("Recipe", backref=backref("recipeingredients" ))
-    ingredient = relationship("Ingredient", backref=backref("recipeingredients" ))
-    unit = relationship("Unit", backref=backref("recipeingredients" ))
+    recipe_rel = relationship("Recipe", backref=backref("recipeingredients", cascade="all, delete-orphan" ))
+    ingredient = relationship("Ingredient", backref=backref("recipeingredients", cascade="all, delete-orphan" ))
+    unit = relationship("Unit", backref=backref("recipeingredients", cascade="all, delete-orphan" ))
 
 class Recipe(db.Model):
     __tablename__ = 'recipe'
@@ -21,7 +21,7 @@ class Recipe(db.Model):
     difficulty = Column(String(20), nullable=True)
     description = Column(String(2000), nullable=False)
 
-    user = relationship("User", backref=backref("user" ))
+    user = relationship("User", backref=backref("user", cascade="all, delete-orphan" ))
 
     @staticmethod
     def json_schema():
@@ -50,6 +50,27 @@ class User(db.Model):
 
     def __repr__(self):
         return '<User {}\n,email={}\n>'.format(self.name, self.email)
+
+    @staticmethod
+    def json_schema():
+        schema = {
+            "type": "object",
+            "required": ["name", "password", "email"]
+        }
+        props = schema["properties"] = {}
+        props["name"] = {
+            "description": "Name of the user",
+            "type": "string"
+        }
+        props["password"] = {
+            "description": "Password of the user",
+            "type": "string"
+        }
+        props["email"] = {
+            "description": "Email of the user",
+            "type": "string"
+        }
+        return schema
 
 class Ingredient(db.Model):
     __tablename__ = "ingredient"
