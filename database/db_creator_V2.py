@@ -50,7 +50,7 @@ def populate_db():
 
     for ingredient in ingredients_1:
         new_ingredients = models.Recipeingredient(
-            id = recipe2.id,
+            id = recipe1.id,
             ingredient_id = ingredient[0].id,
             amount = ingredient[1],
             unit_id = ingredient[2].id
@@ -60,7 +60,7 @@ def populate_db():
 
     for ingredient in ingredients_2:
         new_ingredients = models.Recipeingredient(
-            id = recipe1.id,
+            id = recipe2.id,
             ingredient_id = ingredient[0].id,
             amount = ingredient[1],
             unit_id = ingredient[2].id

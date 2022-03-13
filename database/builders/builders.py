@@ -263,8 +263,9 @@ class RecipeItem(Resource):
         if recipe_item == None:
             return create_error_response(404, "Ei oo", "No recipe_item")
         ingredients = []
+        ings_all = []
         for row in recipe_item:
-            ingredients.append(row)
+            ingredients.append(list(row))
         print(ingredients)
         data = RecipeBuilder(
             name=recipe_name.name,
