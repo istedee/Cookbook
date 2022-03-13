@@ -2,6 +2,7 @@
 
 from flask import request
 import json
+from matplotlib import use
 import pytest
 import sys
 import os
@@ -47,7 +48,9 @@ def test_new_app():
         assert response.status_code == 200
 
 def test_recipe_json(client):
-
+    """
+    Tests to fetch populated recipe from API
+    """
     client.post("/api/populate/", json={
 
     })
@@ -55,6 +58,9 @@ def test_recipe_json(client):
     assert response.json["items"][0]["name"] == "Cake-Recipe"
 
 def test_recipe_faulty(client):
+    """
+    Tests to fetch non existent recipe
+    """
 
     client.post("/api/populate/", json={
 
@@ -64,6 +70,9 @@ def test_recipe_faulty(client):
         assert response.json["items"][0]["name"] == "Ville Vallaton"
 
 def test_edit_recipe(client):
+    """
+    Tests to edit recipe
+    """
 
     edit_msg = "Tata on muokattu"
 
@@ -78,13 +87,16 @@ def test_edit_recipe(client):
     assert response.json["description"] == edit_msg
 
 def test_edit_non_existent_recipe(client):
+    """
+    Tests to edit recipe which does not exist in the db
+    """
 
     edit_msg = "Tata on muokattu"
 
     client.post("/api/populate/", json={
 
     })
-    response = client.put("/api/recipes/Ei-ole-resepti", data={
+    response = client.put("/api/recipes/Ei-ole-resepti/", data={
         "name": "Water-Recipe",
         "description": edit_msg
     })
@@ -104,3 +116,37 @@ def test_edit_recipe_faulty_key(client):
     })
     #Test returns 415 since this key is faulty
     assert response.status_code == 415
+
+def test_get_user_recipe(client):
+
+    user = "Taneli-Testiukko"
+    recipe = "Water-Recipe"
+
+    client.post("/api/populate/", json={
+
+    })
+    response = client.get("/api/" + user + "/" + recipe + "/")
+    assert response.status_code == 200
+    assert response.json["name"] == recipe
+    assert response.json["owner"] == user
+
+def test_get_nonexistent_user_recipe(client):
+
+    user = "Eioletallaista"
+    recipe = "Water-Recipe"
+
+    client.post("/api/populate/", json={
+
+    })
+    response = client.get("/api/" + user + "/" + recipe + "/")
+    #Test returns 404 since the user does not exist in the db
+    assert response.status_code == 404
+
+def test_get_recipeingredients(client):
+
+    client.post("/api/populate/", json={
+
+    })
+    response = client.get("/api/recipeingredients/")
+    assert response.status_code == 200
+

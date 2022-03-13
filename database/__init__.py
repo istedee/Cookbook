@@ -28,7 +28,7 @@ def create_app():
         api.add_resource(populate_route.Populate, "/api/populate")
         api.add_resource(ingredient_route.Ingredients, "/api/ingredients")
         api.add_resource(user_route.UserCollection, "/api/users")
-        api.add_resource(recipe_ingredients.Recipeingredients, "/api/recipeingredients")
+        api.add_resource(recipe_ingredients.Recipeingredients, "/api/recipeingredients/")
         api.add_resource(RecipeCollection, "/api/recipes/")
         app.url_map.converters["recipe"] = RecipeConverter
         app.url_map.converters["user"] = UserConverter
