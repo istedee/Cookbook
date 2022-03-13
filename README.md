@@ -38,3 +38,11 @@ Populated database can be viewed from the terminal print when sending a GET requ
 This prints the content of the database to check that the population was succesful.
 
 Location of the database is <b> /database/cookbook.db </b>
+
+The tests for the application can be run and found from the folder /tests
+with command in the folder:
+```
+pytest
+```
+
+This will setup a test application with pytest and test the application for any potential errors
