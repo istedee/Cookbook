@@ -31,11 +31,11 @@ class Recipe(db.Model):
         }
         props = schema["properties"] = {}
         props["name"] = {
-            "description": "huutis",
+            "description": "Name of the recipe",
             "type": "string"
         }
         props["description"] = {
-            "description": "nauris",
+            "description": "Description of the recipe",
             "type": "string"
         }
         return schema

@@ -109,3 +109,6 @@ ENV/
 # ansible
 #hosts
 *.retry
+
+#VScode settings files
+.vscode/*
