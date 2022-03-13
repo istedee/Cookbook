@@ -362,10 +362,6 @@ class UserRecipe(Resource):
             description=recipe_item.description,
             owner=user.name,
         )
-#        data.add_namespace("storage", LINK_RELATIONS_URL)
-#        data.add_control("self", url_for("recipeitem", recipe=recipe.name))
-#        data.add_control("collection", url_for("recipecollection"))
-#        data.add_control("profile", href=PRODUCT_PROFILE_URL)
         data.add_control_edit_recipe(recipe)
         data.add_control_delete_recipe(recipe)
 
