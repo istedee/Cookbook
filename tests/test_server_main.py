@@ -76,3 +76,31 @@ def test_edit_recipe(client):
     })
     response = client.get("/api/recipes/Water-Recipe/")
     assert response.json["description"] == edit_msg
+
+def test_edit_non_existent_recipe(client):
+
+    edit_msg = "Tata on muokattu"
+
+    client.post("/api/populate/", json={
+
+    })
+    response = client.put("/api/recipes/Ei-ole-resepti", data={
+        "name": "Water-Recipe",
+        "description": edit_msg
+    })
+    #Test returns 404 since this recipe does not exist
+    assert response.status_code == 404
+
+def test_edit_recipe_faulty_key(client):
+
+    edit_msg = "Tata on muokattu"
+
+    client.post("/api/populate/", json={
+
+    })
+    response = client.put("/api/recipes/Water-Recipe/", data={
+        "name": "Water-Recipe",
+        "faulty_key": edit_msg
+    })
+    #Test returns 415 since this key is faulty
+    assert response.status_code == 415

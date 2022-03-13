@@ -319,6 +319,8 @@ class RecipeItem(Resource):
             return create_error_response(415, "Wrong content", "Should be JSON")
         except KeyError:
             return create_error_response(400, "Invalid content", "Validation fails")
+        except ValueError:
+            return create_error_response(400, "Invalid content", "Validation fails")
         
         try:
             db.session.commit()
