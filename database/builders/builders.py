@@ -254,7 +254,11 @@ class RecipeItem(Resource):
     def get(self, recipe):
         recipe_name = db.session.query(Recipe).filter_by(name=recipe.name).first()
         print(recipe_name.name)
-        recipe_item = db.session.query(Ingredient.name, Recipeingredient.amount, Unit.unit).filter(Recipeingredient.ingredient_id == Ingredient.id
+        recipe_item = db.session.query(Ingredient.name,
+                                        Recipeingredient.amount,
+                                        Unit.unit
+        ).filter(
+            Recipeingredient.ingredient_id == Ingredient.id
         ).filter(
             Recipeingredient.id == recipe.id
         ).filter(

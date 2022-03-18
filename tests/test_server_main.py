@@ -2,7 +2,6 @@
 
 from flask import request
 import json
-from matplotlib import use
 import pytest
 import sys
 import os
