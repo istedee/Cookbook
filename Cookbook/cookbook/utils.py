@@ -129,6 +129,38 @@ class RecipeBuilder(MasonBuilder):
             title="Delete this user"
         )
 
+class IngredientBuilder(MasonBuilder):
+    
+    def add_control_ingredients_all(self, ingredient):
+        self.add_control(
+            ctrl_name="cookbook:ingredients-all",
+            href=url_for("api.ingredientcollection", ingredient=ingredient),
+            title="All ingredients",
+            method="GET",
+            encoding="JSON"
+        )
+
+    def add_control_add_ingredient(self, ingredient):
+        self.add_control_post(
+            ctrl_name="cookbook:add-ingredient",
+            title="Add a new ingredient",
+            href=url_for("api.ingredientcollection", ingredient=ingredient),
+            schema=Ingredient.json_schema()
+        )
+
+    def add_control_delete_ingredient(self, ingredient):
+        self.add_control_delete(
+            "cookbook:delete",
+            url_for("api.ingredientitem", ingredient=ingredient)
+        )
+
+    def add_control_edit_ingredient(self, ingredient):
+        self.add_control_put(
+            "Edit this ingredient",
+            url_for("api.ingredientitem", ingredient=ingredient),
+            Ingredient.json_schema()
+        )
+
 def create_error_response(status_code, title, message=None):
     resource_url = request.path
     data = MasonBuilder(resource_url=resource_url)
