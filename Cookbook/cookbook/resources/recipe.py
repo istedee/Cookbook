@@ -151,7 +151,7 @@ class RecipeItem(Resource):
         data.add_control_edit_recipe(recipe, user)
         data.add_control_delete_recipe(recipe, user)
 
-        return Response(json.dumps(data), status=200, mimetype=JSON)
+        return Response(json.dumps(data), status=200, mimetype=MASON)
 
     def put(self, recipe, user):
         recipe_item = db.session.query(Recipe).filter_by(name=recipe.name).first()
