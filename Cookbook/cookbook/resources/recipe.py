@@ -135,6 +135,7 @@ class RecipeItem(Resource):
             "self", url_for("api.recipeitem", user=user.name, recipe=recipe.name)
         )
         data.add_control("collection", url_for("api.recipecollection", user=user.name))
+        data.add_control("user", url_for("api.useritem", user=user.name))
         data.add_control_edit_recipe(recipe, user)
         data.add_control_delete_recipe(recipe, user)
 
