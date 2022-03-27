@@ -97,7 +97,7 @@ class UserItem(Resource):
         return Response(
             json.dumps(data, indent=4, separators=(",", ": ")),
             status=200,
-            mimetype=JSON,
+            mimetype=MASON,
         )
 
     def put(self, user):
