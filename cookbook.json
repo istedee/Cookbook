@@ -1,0 +1,593 @@
+{
+  "openapi": "3.0.3",
+  "servers": [
+    {
+      "url": "/api"
+    }
+  ],
+  "components": {
+    "parameters": {
+      "Recipe": {
+        "description": "Name of the recipe",
+        "in": "path",
+        "name": "recipe",
+        "required": true,
+        "schema": {
+          "type": "string"
+        }
+      }
+    },
+    "schemas": {
+      "User": {
+        "properties": {
+          "name": {
+            "description": "Name of the user",
+            "type": "string"
+          },
+          "address": {
+            "description": "Address of the user",
+            "type": "string"
+          },
+          "email": {
+            "description": "email of the user",
+            "type": "string"
+          },
+          "password": {
+            "description": "password of the user",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "email",
+          "password"
+        ],
+        "type": "object"
+      },
+      "Recipe": {
+        "properties": {
+          "user_id": {
+            "description": "Id of the user who owns the recipe",
+            "type": "string"
+          },
+          "name": {
+            "description": "Recipe's unique name",
+            "type": "string"
+          },
+          "difficulty": {
+            "description": "Difficulty of the recipe",
+            "type": "string"
+          },
+          "description": {
+            "description": "Description of the recipe",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "description"
+        ],
+        "type": "object"
+      },
+      "Recipeingredient": {
+        "properties": {
+          "name": {
+            "description": "Recipe ingredients name",
+            "type": "string"
+          },
+          "amount": {
+            "description": "Amount of recipe ingredient",
+            "type": "number"
+          },
+          "unit": {
+            "description": "Ingredient unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name",
+          "amount",
+          "unit"
+        ],
+        "type": "object"
+      },
+      "Ingredient": {
+        "properties": {
+          "name": {
+            "description": "Name of the ingredient",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ],
+        "type": "object"
+      },
+      "Unit": {
+        "properties": {
+          "name": {
+            "description": "Name of the Unit",
+            "type": "string"
+          }
+        },
+        "required": [
+          "name"
+        ]
+      },
+      "Amount": {
+        "properties": {
+          "amount": {
+            "description": "Amount of ingredient",
+            "type": "number"
+          }
+        },
+        "required": [
+          "amount"
+        ],
+        "type": "number"
+      }
+    }
+  },
+  "info": {
+    "title": "Cookbook",
+    "version": "1.0.1",
+    "description": "This documentation is about Programmable web project course work, which is an API for storing recipes in a database.\n",
+    "termsOfService": "http://totally.not.placehold.er/",
+    "contact": {
+      "url": "http://totally.not.placehold.er/",
+      "email": "no@contanct.info",
+      "name": "Cookers"
+    },
+    "license": {
+      "name": "GPL-3.0 License",
+      "url": "https://github.com/istedee/Cookbook/blob/master/LICENSE"
+    }
+  },
+  "paths": {
+    "/users/": {
+      "get": {
+        "description": "Get the list of users",
+        "responses": {
+          "201": {
+            "description": "List of users in the application database",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "Bob",
+                    "address": "Examplestreet 12",
+                    "email": "test.email@example.com"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new user",
+        "requestBody": {
+          "description": "JSON document that contains basic data for a new user",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              },
+              "example": {
+                "name": "Bob",
+                "email": "bob@email.net",
+                "address": "bob street 420",
+                "password": "super_secret_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The user was created successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the new user",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "409": {
+            "description": "An user already exists"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      }
+    },
+    "/users/<user:user>/": {
+      "get": {
+        "description": "Get spesific user",
+        "responses": {
+          "200": {
+            "description": "List of users information",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "Bob",
+                    "address": "Examplestreet 12",
+                    "email": "test.email@example.com"
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "description": "Modify user",
+        "requestBody": {
+          "description": "JSON document that contains basic data for modificating user",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User"
+              },
+              "example": {
+                "name": "Bobi",
+                "email": "bob@email.net",
+                "address": "bob street 420",
+                "password": "new_super_secret_password"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The user was created successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the new user",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "404": {
+            "description": "User was not found in the database"
+          },
+          "409": {
+            "description": "An user information conflicts existing db info"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      }
+    },
+    "/users/<user:user>/recipes/": {
+      "get": {
+        "description": "Get spesific users recipes",
+        "responses": {
+          "200": {
+            "description": "List of users information",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "description": "Resepti lonkero-annokselle",
+                    "difficulty": "Easy",
+                    "name": "Karpalolonkku",
+                    "owner": "bobi",
+                    "user_id": 3
+                  }
+                ]
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "description": "Post recipe",
+        "requestBody": {
+          "description": "JSON document that contains information of Recipe and ingredients",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              "example": {
+                "JSON": {
+                  "recipe": {
+                    "name": "Cake Recipe",
+                    "description": "This recipe contains instructions how to bake a cake",
+                    "difficulty": "hard"
+                  },
+                  "ingredients": [
+                    {
+                      "name": "Milk",
+                      "unit": "cup",
+                      "amount": 2
+                    },
+                    {
+                      "name": "Egg",
+                      "unit": "pcs",
+                      "amount": 5
+                    }
+                  ]
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The recipe was created successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the new recipe",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "409": {
+            "description": "An user information conflicts existing db info"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      }
+    },
+    "/users/<user:user>/recipes/<recipe:recipe>": {
+      "get": {
+        "description": "Get spesific users spesific recipe",
+        "responses": {
+          "200": {
+            "description": "List of users recipe information",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "Karpalolonkku",
+                    "description": "Recipe for Lonkero",
+                    "difficulty": "Easy",
+                    "ingredients": [
+                      [
+                        "Lonkero Original Karpalo 5.5%"
+                      ],
+                      [
+                        1
+                      ],
+                      [
+                        "kolpakko"
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "description": "Post recipe",
+        "requestBody": {
+          "description": "JSON document that contains information of Recipe and description",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Recipe"
+              },
+              "example": {
+                "JSON": {
+                  "name": "Cake Recipe",
+                  "description": "I modified this description of the recipe"
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The recipe was altered successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the recipe",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "409": {
+            "description": "An user information conflicts existing db info"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete user",
+        "responses": {
+          "204": {
+            "description": "Deleted user succesfully"
+          },
+          "404": {
+            "description": "User was not found in the database"
+          }
+        }
+      }
+    },
+    "/ingredients/": {
+      "get": {
+        "description": "Get the list of ingredients",
+        "responses": {
+          "200": {
+            "description": "List of ingredients in the application database",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "items": [
+                      [
+                        {
+                          "name": "Oliivioljy"
+                        }
+                      ],
+                      [
+                        {
+                          "name": "egg"
+                        }
+                      ]
+                    ]
+                  }
+                ]
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "post": {
+        "description": "Create a new ingredient",
+        "requestBody": {
+          "description": "JSON document that contains basic data for a new user",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ingredient"
+              },
+              "example": {
+                "ingredients": [
+                  {
+                    "name": "Oliveoil"
+                  },
+                  {
+                    "name": "Flour"
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "The ingredient was created successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the new ingredient",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "409": {
+            "description": "An ingredient already exists"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      }
+    },
+    "/ingredients/<ingredient:ingredient>": {
+      "get": {
+        "description": "Get the list of ingredients",
+        "responses": {
+          "200": {
+            "description": "List of ingredients in the application database",
+            "content": {
+              "application/json": {
+                "example": [
+                  {
+                    "name": "Oliveoil"
+                  }
+                ]
+              }
+            }
+          },
+          "404": {
+            "description": "Not found"
+          }
+        }
+      },
+      "put": {
+        "description": "Edit ingredient",
+        "requestBody": {
+          "description": "JSON document that contains basic data for an ingredient",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Ingredient"
+              },
+              "example": {
+                "name": "Modified Oliveoil, now replacing old Oliveoil"
+              }
+            }
+          }
+        },
+        "responses": {
+          "204": {
+            "description": "The ingredient was created successfully",
+            "headers": {
+              "Location": {
+                "description": "URI of the new ingredient",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "The request body was not valid, Validation Error"
+          },
+          "404": {
+            "description": "Not found"
+          },
+          "409": {
+            "description": "An ingredient already exists"
+          },
+          "415": {
+            "description": "Wrong media type was used"
+          }
+        }
+      },
+      "delete": {
+        "description": "Delete ingredient",
+        "responses": {
+          "204": {
+            "description": "Deleted ingredient succesfully"
+          },
+          "404": {
+            "description": "Ingredient was not found in the database"
+          }
+        }
+      }
+    }
+  }
+}
