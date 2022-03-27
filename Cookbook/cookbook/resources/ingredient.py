@@ -24,7 +24,6 @@ class IngredientCollection(Resource):
                 "self", url_for("api.ingredientitem",
                         ingredient=item.name)
                         )
-            build["items"].append(data)
         build.add_control("self", href=url_for("api.ingredientcollection",
                         ingredient=item)
                         )
@@ -92,7 +91,7 @@ class IngredientItem(Resource):
         return Response(
             json.dumps(data, indent=4, separators=(",", ": ")),
             status=200,
-            mimetype=JSON,
+            mimetype=MASON,
         )
 
     def put(self, ingredient):
