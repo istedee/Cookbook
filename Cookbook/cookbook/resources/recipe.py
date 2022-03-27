@@ -4,7 +4,7 @@ from flask import url_for, Response, request
 from flask_restful import Api, Resource
 from ..models import Recipe, Ingredient, Recipeingredient, Unit
 from .. import db
-from ..utils import RecipeBuilder, create_error_response, searchModels
+from ..utils import IngredientBuilder, RecipeBuilder, create_error_response, searchModels
 from ..constants import *
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
@@ -122,14 +122,26 @@ class RecipeItem(Resource):
         ).all()
         if recipe_item == None:
             return create_error_response(404, "Ei oo", "No recipe_item")
-        ingredients = []
+#        ingredients = []
+        build = IngredientBuilder(items=[])
         for row in recipe_ingredient:
-            ingredients.append(list(row))
+#            ingredients.append(list(row))
+            dataa = IngredientBuilder(
+                name=row[0],
+                amount=row[1],
+                unit=row[2]
+            )
+            
+            dataa.add_control(
+                "self", url_for("api.ingredientitem",
+                        ingredient=row[0])
+                        )
+            build["items"].append(dataa)
         data = RecipeBuilder(
             name=recipe_item.name,
             description=recipe_item.description,
             difficulty=recipe_item.difficulty,
-            ingredients=ingredients
+            ingredients=build
         )
         data.add_control(
             "self", url_for("api.recipeitem", user=user.name, recipe=recipe.name)
