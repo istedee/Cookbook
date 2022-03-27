@@ -33,8 +33,10 @@ def create_app(test_config=None):
     from . import api
     from .resources.user import UserConverter
     from .resources.recipe import RecipeConverter
+    from .resources.ingredient import IngredientConverter
     app.url_map.converters["recipe"] = RecipeConverter
     app.url_map.converters["user"] = UserConverter
+    app.url_map.converters["ingredient"] = IngredientConverter
     from .models import User
     app.cli.add_command(models.init_db_command)
     app.cli.add_command(models.generate_test_data)
