@@ -1,25 +1,29 @@
+"""Methods for Recipe collection"""
+
 import json
 from sqlite3 import IntegrityError
 from flask import url_for, Response, request
-from flask_restful import Api, Resource
+from flask_restful import Resource
+from werkzeug.exceptions import NotFound
+from werkzeug.routing import BaseConverter
+from jsonschema import validate, ValidationError, draft7_format_checker
 from ..models import Recipe, Ingredient, Recipeingredient, Unit
-from .. import db
+from .. import DB
 from ..utils import (
     IngredientBuilder,
     RecipeBuilder,
     create_error_response,
-    searchModels,
+    search_models,
 )
-from ..constants import *
-from werkzeug.exceptions import NotFound
-from werkzeug.routing import BaseConverter
-from jsonschema import validate, ValidationError, draft7_format_checker
+from ..constants import MASON, DIFFICULTIES
 
 
 class RecipeCollection(Resource):
+    """Methods for Recipecollection"""
     def get(self, user):
+        """Get method functionality for Recipecollection"""
         build = RecipeBuilder(items=[])
-        inventory = db.session.query(Recipe).filter_by(user_id=user.id).all()
+        inventory = DB.session.query(Recipe).filter_by(user_id=user.id).all()
         for item in inventory:
             data = RecipeBuilder(
                 name=item.name,
@@ -44,8 +48,9 @@ class RecipeCollection(Resource):
         )
 
     def post(self, user):
+        """Post method functionality for Recipecollection"""
 
-        if request.json == None:
+        if request.json is None:
             return create_error_response(415, "BAD CONTENT", "MUST BE JSON")
         try:
             validate(
@@ -59,8 +64,8 @@ class RecipeCollection(Resource):
                     Recipeingredient.json_schema(),
                     format_checker=draft7_format_checker,
                 )
-        except ValidationError as e:
-            return create_error_response(400, "Invalid JSON", str(e))
+        except ValidationError as e_msg:
+            return create_error_response(400, "Invalid JSON", str(e_msg))
         try:
             p_name = request.json["recipe"]["name"]
             recipe_name = Recipe.query.filter_by(name=p_name).first()
@@ -79,17 +84,17 @@ class RecipeCollection(Resource):
             new_recipe = Recipe(
                 name=p_name, description=p_desc, difficulty=p_diff, user_id=user.id
             )
-            db.session.add(new_recipe)
-            db.session.commit()
+            DB.session.add(new_recipe)
+            DB.session.commit()
         except IntegrityError:
             return create_error_response(409, "Duplicate", "Database error")
 
-        recipe = db.session.query(Recipe).filter_by(name=p_name).first()
+        recipe = DB.session.query(Recipe).filter_by(name=p_name).first()
 
         for ingredient in request.json["ingredients"]:
             recipe_id = recipe.id
-            ing_id = searchModels(ingredient["name"], Ingredient)
-            ing_unit = searchModels(ingredient["unit"], Unit)
+            ing_id = search_models(ingredient["name"], Ingredient)
+            ing_unit = search_models(ingredient["unit"], Unit)
             ing_amount = ingredient["amount"]
             try:
                 new_ingredient = Recipeingredient(
@@ -98,10 +103,10 @@ class RecipeCollection(Resource):
                     amount=ing_amount,
                     unit_id=ing_unit,
                 )
-                db.session.add(new_ingredient)
-                db.session.commit()
+                DB.session.add(new_ingredient)
+                DB.session.commit()
             except IntegrityError:
-                db.session.rollback()
+                DB.session.rollback()
                 return create_error_response(409, "Duplicate", "Database error")
 
         return Response(
@@ -114,16 +119,18 @@ class RecipeCollection(Resource):
 
 
 class RecipeItem(Resource):
+    """Methods for Recipeitems"""
     def get(self, recipe, user):
-        recipe_item = db.session.query(Recipe).filter_by(name=recipe.name).first()
+        """Get method functionality for Recipeitem"""
+        recipe_item = DB.session.query(Recipe).filter_by(name=recipe.name).first()
         recipe_ingredient = (
-            db.session.query(Ingredient.name, Recipeingredient.amount, Unit.name)
+            DB.session.query(Ingredient.name, Recipeingredient.amount, Unit.name)
             .filter(Recipeingredient.ingredient_id == Ingredient.id)
             .filter(Recipeingredient.id == recipe.id)
             .filter(Unit.id == Recipeingredient.unit_id)
             .all()
         )
-        if recipe_item == None:
+        if recipe_item is None:
             return create_error_response(404, "Ei oo", "No recipe_item")
         #        ingredients = []
         build = IngredientBuilder(items=[])
@@ -149,8 +156,9 @@ class RecipeItem(Resource):
 
         return Response(json.dumps(data), status=200, mimetype=MASON)
 
-    def put(self, recipe, user):
-        recipe_item = db.session.query(Recipe).filter_by(name=recipe.name).first()
+    def put(self, recipe):
+        """Put method functionality for Recipeitem"""
+        recipe_item = DB.session.query(Recipe).filter_by(name=recipe.name).first()
         if not recipe_item:
             return create_error_response(404, "recipe not found")
         try:
@@ -162,28 +170,32 @@ class RecipeItem(Resource):
             return create_error_response(400, "Invalid content", "Validation fails")
 
         try:
-            db.session.commit()
+            DB.session.commit()
         except IntegrityError:
-            db.session.rollback()
+            DB.session.rollback()
             return create_error_response(status_code=409, title="Taken")
         return Response(status=204, mimetype=MASON)
 
-    def delete(self, recipe, user):
-        recipe_h = db.session.query(Recipe).filter_by(name=recipe.name).first()
+    def delete(self, recipe):
+        """Delete method functionality for Recipeitem"""
+        recipe_h = DB.session.query(Recipe).filter_by(name=recipe.name).first()
         if not recipe_h:
             return create_error_response(404, "Not Found", "recipe not found")
 
-        db.session.delete(recipe_h)
-        db.session.commit()
+        DB.session.delete(recipe_h)
+        DB.session.commit()
         return Response(status=204, mimetype=MASON)
 
 
 class RecipeConverter(BaseConverter):
+    """Converts the Recipe for suitable mode"""
     def to_python(self, recipe):
-        db_recipe = db.session.query(Recipe).filter_by(name=recipe).first()
+        """Converts recipe from url to python object"""
+        db_recipe = DB.session.query(Recipe).filter_by(name=recipe).first()
         if db_recipe is None:
             raise NotFound
         return db_recipe
 
     def to_url(self, db_recipe):
+        """Converts object to URL"""
         return str(db_recipe)

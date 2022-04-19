@@ -1,14 +1,22 @@
+"""
+Init file for starting the application
+"""
+
 import os
 from flask import Flask, Response
 from flask_sqlalchemy import SQLAlchemy
 from cookbook.constants import *
 
 
-db = SQLAlchemy()
+DB = SQLAlchemy()
 
 # Based on http://flask.pocoo.org/docs/1.0/tutorial/factory/#the-application-factory
 # Modified to use Flask SQLAlchemy
 def create_app(test_config=None):
+    """
+    Starts the app
+    """
+
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_mapping(
         SECRET_KEY="dev",
@@ -27,11 +35,9 @@ def create_app(test_config=None):
     except OSError:
         pass
 
-    db.init_app(app)
+    DB.init_app(app)
 
     from . import models
-
-    """Imports API configuration"""
     from . import api
     from .resources.user import UserConverter
     from .resources.recipe import RecipeConverter
@@ -40,11 +46,11 @@ def create_app(test_config=None):
     app.url_map.converters["recipe"] = RecipeConverter
     app.url_map.converters["user"] = UserConverter
     app.url_map.converters["ingredient"] = IngredientConverter
-    from .models import User
+    #    from .models import User
 
     app.cli.add_command(models.init_db_command)
     app.cli.add_command(models.generate_test_data)
-    app.register_blueprint(api.api_bp)
+    app.register_blueprint(api.API_BP)
 
     @app.route(LINK_RELATIONS_URL)
     def send_link_relations():
