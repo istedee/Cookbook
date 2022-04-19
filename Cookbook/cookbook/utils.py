@@ -84,6 +84,7 @@ class RecipeBuilder(MasonBuilder):
     """
     Recipebuilder controls the routes for recipes
     """
+
     def add_control_recipes_all(self, user):
         """
         Method to add a all recipes control
@@ -171,6 +172,7 @@ class RecipeBuilder(MasonBuilder):
 
 class IngredientBuilder(MasonBuilder):
     """Builder for Ingredients routes"""
+
     def add_control_ingredients_all(self, ingredient):
         """Route for all ingredients"""
         self.add_control(

@@ -20,6 +20,7 @@ from ..constants import MASON, DIFFICULTIES
 
 class RecipeCollection(Resource):
     """Methods for Recipecollection"""
+
     def get(self, user):
         """Get method functionality for Recipecollection"""
         build = RecipeBuilder(items=[])
@@ -120,6 +121,7 @@ class RecipeCollection(Resource):
 
 class RecipeItem(Resource):
     """Methods for Recipeitems"""
+
     def get(self, recipe, user):
         """Get method functionality for Recipeitem"""
         recipe_item = DB.session.query(Recipe).filter_by(name=recipe.name).first()
@@ -189,6 +191,7 @@ class RecipeItem(Resource):
 
 class RecipeConverter(BaseConverter):
     """Converts the Recipe for suitable mode"""
+
     def to_python(self, recipe):
         """Converts recipe from url to python object"""
         db_recipe = DB.session.query(Recipe).filter_by(name=recipe).first()

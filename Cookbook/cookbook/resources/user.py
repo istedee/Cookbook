@@ -16,13 +16,17 @@ from ..constants import MASON, USER_PROFILE, LINK_RELATIONS_URL
 
 class UserCollection(Resource):
     """Methods for Usercollection access"""
+
     def get(self):
         """Get method functionality for Usercollection"""
         body = RecipeBuilder(items=[])
         users = DB.session.query(User).all()
         for user in users:
             data = RecipeBuilder(
-                name=user.name, address=user.address, email=user.email, password=user.password
+                name=user.name,
+                address=user.address,
+                email=user.email,
+                password=user.password,
             )
             data.add_control("self", url_for("api.useritem", user=user.name))
             data.add_control("profile", USER_PROFILE)
@@ -56,9 +60,9 @@ class UserCollection(Resource):
             u_email = request.json["email"]
             u_password = request.json["password"]
             if (
-                    not isinstance(u_address, str)
-                    or not isinstance(u_email, str)
-                    or not isinstance(u_password, str)
+                not isinstance(u_address, str)
+                or not isinstance(u_email, str)
+                or not isinstance(u_password, str)
             ):
                 return create_error_response(400, "Invalid values")
         except KeyError:
@@ -81,6 +85,7 @@ class UserCollection(Resource):
 
 class UserItem(Resource):
     """Useritem access methods"""
+
     def get(self, user):
         """Get method functionality for Useritem"""
         user_i = DB.session.query(User).filter_by(name=user.name).first()
@@ -144,6 +149,7 @@ class UserItem(Resource):
 
 class UserConverter(BaseConverter):
     """Converts User to suitable form"""
+
     def to_python(self, user):
         """Converts user from URL to object"""
         db_user = DB.session.query(User).filter_by(name=user).first()

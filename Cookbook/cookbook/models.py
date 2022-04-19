@@ -13,6 +13,7 @@ class User(DB.Model):
     """
     User database model
     """
+
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=False, nullable=False)
@@ -38,11 +39,10 @@ class Recipeingredient(DB.Model):
     """
     Recipes ingredient database model
     """
+
     __tablename__ = "recipeingredient"
     id = Column(Integer, ForeignKey("recipe.id"), primary_key=True)
-    ingredient_id = Column(
-        Integer, ForeignKey("ingredient.id"), primary_key=True
-    )
+    ingredient_id = Column(Integer, ForeignKey("ingredient.id"), primary_key=True)
     amount = Column(Integer)
     unit_id = Column(Integer, ForeignKey("unit.id"), primary_key=True)
 
@@ -79,6 +79,7 @@ class Recipe(DB.Model):
     """
     Recipe database model
     """
+
     __tablename__ = "recipe"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"))
@@ -86,9 +87,7 @@ class Recipe(DB.Model):
     difficulty = Column(String(20), nullable=True)
     description = Column(String(2000), nullable=False)
 
-    user = relationship(
-        "User", backref=backref("user", cascade="all, delete-orphan")
-    )
+    user = relationship("User", backref=backref("user", cascade="all, delete-orphan"))
 
     @staticmethod
     def json_schema():
@@ -109,6 +108,7 @@ class Ingredient(DB.Model):
     """
     Ingredient database model
     """
+
     __tablename__ = "ingredient"
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
@@ -126,6 +126,7 @@ class Unit(DB.Model):
     """
     Unit database model
     """
+
     __tablename__ = "unit"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
