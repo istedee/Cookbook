@@ -16,6 +16,7 @@ from ..constants import MASON, LINK_RELATIONS_URL
 
 class IngredientCollection(Resource):
     """Defines get and post methods for ingredient collection"""
+
     def get(self):
         """Defines functionality for get method"""
         build = IngredientBuilder(items=[])
@@ -28,6 +29,7 @@ class IngredientCollection(Resource):
             data.add_control(
                 "self", url_for("api.ingredientitem", ingredient=item.name)
             )
+            build["items"].append(data)
         build.add_control(
             "self", href=url_for("api.ingredientcollection", ingredient=item)
         )
@@ -87,6 +89,7 @@ class IngredientCollection(Resource):
 
 class IngredientItem(Resource):
     """Functionalites for single ingredient items"""
+
     def get(self, ingredient):
         """Get method functionality for ingredient item"""
         ing = DB.session.query(Ingredient).filter_by(name=ingredient.name).first()
@@ -140,6 +143,7 @@ class IngredientItem(Resource):
 
 class IngredientConverter(BaseConverter):
     """Converts ingredient item from URL"""
+
     def to_python(self, ingredient):
         db_ingredient = DB.session.query(Ingredient).filter_by(name=ingredient).first()
         if db_ingredient is None:
