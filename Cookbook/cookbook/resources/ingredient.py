@@ -57,24 +57,24 @@ class IngredientCollection(Resource):
                 )
         except ValidationError as e_msg:
             return create_error_response(400, "Invalid JSON", str(e_msg))
-        try:
-            for i in request.json["ingredients"]:
-                p_name = i["name"]
-                ing_name = Ingredient.query.filter_by(name=p_name).first()
-                if ing_name:
-                    continue
+        #        try:
+        for i in request.json["ingredients"]:
+            p_name = i["name"]
+            ing_name = Ingredient.query.filter_by(name=p_name).first()
+            if ing_name:
+                continue
 
-                try:
-                    new_ingredient = Ingredient(
-                        name=p_name,
-                    )
-                    DB.session.add(new_ingredient)
-                    DB.session.commit()
-                except IntegrityError:
-                    return create_error_response(409, "Duplicate", "Database error")
+            #                try:
+            new_ingredient = Ingredient(
+                name=p_name,
+            )
+            DB.session.add(new_ingredient)
+            DB.session.commit()
+        #                except IntegrityError:
+        #                    return create_error_response(409, "Duplicate", "Database error")
 
-        except KeyError:
-            return create_error_response(400, "KeyError", "Check the JSON keys")
+        #        except KeyError:
+        #            return create_error_response(400, "KeyError", "Check the JSON keys")
 
         return Response(
             status=201,
