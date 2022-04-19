@@ -4,7 +4,12 @@ from flask import url_for, Response, request
 from flask_restful import Api, Resource
 from ..models import Recipe, Ingredient, Recipeingredient, Unit
 from .. import db
-from ..utils import IngredientBuilder, RecipeBuilder, create_error_response, searchModels
+from ..utils import (
+    IngredientBuilder,
+    RecipeBuilder,
+    create_error_response,
+    searchModels,
+)
 from ..constants import *
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
@@ -44,11 +49,15 @@ class RecipeCollection(Resource):
             return create_error_response(415, "BAD CONTENT", "MUST BE JSON")
         try:
             validate(
-                request.json["recipe"], Recipe.json_schema(), format_checker=draft7_format_checker
+                request.json["recipe"],
+                Recipe.json_schema(),
+                format_checker=draft7_format_checker,
             )
             for ingredient in request.json["ingredients"]:
                 validate(
-                    ingredient, Recipeingredient.json_schema(), format_checker=draft7_format_checker
+                    ingredient,
+                    Recipeingredient.json_schema(),
+                    format_checker=draft7_format_checker,
                 )
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON", str(e))
@@ -65,13 +74,10 @@ class RecipeCollection(Resource):
                 p_diff = "undefined"
         except KeyError:
             return create_error_response(400, "KeyError", "SOS")
-        
+
         try:
             new_recipe = Recipe(
-                name=p_name,
-                description=p_desc,
-                difficulty=p_diff,
-                user_id = user.id
+                name=p_name, description=p_desc, difficulty=p_diff, user_id=user.id
             )
             db.session.add(new_recipe)
             db.session.commit()
@@ -87,11 +93,11 @@ class RecipeCollection(Resource):
             ing_amount = ingredient["amount"]
             try:
                 new_ingredient = Recipeingredient(
-                id=recipe_id,
-                ingredient_id=ing_id,
-                amount=ing_amount,
-                unit_id=ing_unit
-            )
+                    id=recipe_id,
+                    ingredient_id=ing_id,
+                    amount=ing_amount,
+                    unit_id=ing_unit,
+                )
                 db.session.add(new_ingredient)
                 db.session.commit()
             except IntegrityError:
@@ -110,38 +116,28 @@ class RecipeCollection(Resource):
 class RecipeItem(Resource):
     def get(self, recipe, user):
         recipe_item = db.session.query(Recipe).filter_by(name=recipe.name).first()
-        recipe_ingredient = db.session.query(Ingredient.name,
-                                        Recipeingredient.amount,
-                                        Unit.name
-        ).filter(
-            Recipeingredient.ingredient_id == Ingredient.id
-        ).filter(
-            Recipeingredient.id == recipe.id
-        ).filter(
-            Unit.id == Recipeingredient.unit_id
-        ).all()
+        recipe_ingredient = (
+            db.session.query(Ingredient.name, Recipeingredient.amount, Unit.name)
+            .filter(Recipeingredient.ingredient_id == Ingredient.id)
+            .filter(Recipeingredient.id == recipe.id)
+            .filter(Unit.id == Recipeingredient.unit_id)
+            .all()
+        )
         if recipe_item == None:
             return create_error_response(404, "Ei oo", "No recipe_item")
-#        ingredients = []
+        #        ingredients = []
         build = IngredientBuilder(items=[])
         for row in recipe_ingredient:
-#            ingredients.append(list(row))
-            dataa = IngredientBuilder(
-                name=row[0],
-                amount=row[1],
-                unit=row[2]
-            )
-            
-            dataa.add_control(
-                "self", url_for("api.ingredientitem",
-                        ingredient=row[0])
-                        )
+            #            ingredients.append(list(row))
+            dataa = IngredientBuilder(name=row[0], amount=row[1], unit=row[2])
+
+            dataa.add_control("self", url_for("api.ingredientitem", ingredient=row[0]))
             build["items"].append(dataa)
         data = RecipeBuilder(
             name=recipe_item.name,
             description=recipe_item.description,
             difficulty=recipe_item.difficulty,
-            ingredients=build
+            ingredients=build,
         )
         data.add_control(
             "self", url_for("api.recipeitem", user=user.name, recipe=recipe.name)

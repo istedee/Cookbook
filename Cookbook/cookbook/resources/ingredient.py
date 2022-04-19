@@ -11,6 +11,7 @@ from .. import db
 from ..models import Ingredient
 from ..constants import *
 
+
 class IngredientCollection(Resource):
     def get(self):
         build = IngredientBuilder(items=[])
@@ -19,16 +20,15 @@ class IngredientCollection(Resource):
             data = IngredientBuilder(
                 name=item.name,
             )
-            
+
             data.add_control(
-                "self", url_for("api.ingredientitem",
-                        ingredient=item.name)
-                        )
-        build.add_control("self", href=url_for("api.ingredientcollection",
-                        ingredient=item)
-                        )
+                "self", url_for("api.ingredientitem", ingredient=item.name)
+            )
+        build.add_control(
+            "self", href=url_for("api.ingredientcollection", ingredient=item)
+        )
         build.add_control_add_ingredient(item.name)
-        
+
         return Response(
             status=200,
             response=json.dumps(
@@ -44,7 +44,9 @@ class IngredientCollection(Resource):
         try:
             for ingredient in request.json["ingredients"]:
                 validate(
-                    ingredient, Ingredient.json_schema(), format_checker=draft7_format_checker
+                    ingredient,
+                    Ingredient.json_schema(),
+                    format_checker=draft7_format_checker,
                 )
         except ValidationError as e:
             return create_error_response(400, "Invalid JSON", str(e))
@@ -57,7 +59,7 @@ class IngredientCollection(Resource):
 
                 try:
                     new_ingredient = Ingredient(
-                    name=p_name,
+                        name=p_name,
                     )
                     db.session.add(new_ingredient)
                     db.session.commit()
@@ -71,9 +73,12 @@ class IngredientCollection(Resource):
             status=201,
             mimetype=MASON,
             headers={
-                "Location": url_for("api.ingredientitem", ingredient=ingredient, recipe=p_name)
+                "Location": url_for(
+                    "api.ingredientitem", ingredient=ingredient, recipe=p_name
+                )
             },
         )
+
 
 class IngredientItem(Resource):
     def get(self, ingredient):
@@ -115,11 +120,14 @@ class IngredientItem(Resource):
     def delete(self, ingredient):
         ing = db.session.query(Ingredient).filter_by(name=ingredient.name).first()
         if not ing:
-            return create_error_response(404, "Not Found", "Ingredient: {ingredient.name} not found")
+            return create_error_response(
+                404, "Not Found", "Ingredient: {ingredient.name} not found"
+            )
 
         db.session.delete(ing)
         db.session.commit()
         return Response(status=204, mimetype=MASON)
+
 
 class IngredientConverter(BaseConverter):
     def to_python(self, ingredient):

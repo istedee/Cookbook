@@ -90,7 +90,9 @@ class UserItem(Resource):
         data.add_control("self", url_for("api.useritem", user=user_i.name))
         data.add_control("profile", href=USER_PROFILE)
         data.add_control("collection", url_for("api.usercollection"))
-        data.add_control("user-recipes", url_for("api.recipecollection", user=user_i.name))
+        data.add_control(
+            "user-recipes", url_for("api.recipecollection", user=user_i.name)
+        )
         data.add_control_edit_user(user.name)
         data.add_control_delete_user(user.name)
 
