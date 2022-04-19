@@ -23,7 +23,7 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 
 @pytest.fixture
 def db_handle():
-    """"Setting the db_handle for testing purpose"""
+    """ "Setting the db_handle for testing purpose"""
     db_fd, db_fname = tempfile.mkstemp()
     app = create_app
     config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname, "TESTING": True}
@@ -89,6 +89,7 @@ def test_fill_db(db_handle):
         assert Recipe.query.count() == 1
         assert Ingredient.query.count() == 1
         assert Unit.query.count() == 1
+
 
 def test_duplicate_recipes(db_handle):
     """
