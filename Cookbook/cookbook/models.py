@@ -21,8 +21,8 @@ class User(DB.Model):
     email = Column(String(100), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
 
-    def __repr__(self):
-        return "<User {}\n,email={}\n>".format(self.name, self.email)
+    #    def __repr__(self):
+    #        return "<User {}\n,email={}\n>".format(self.name, self.email)
 
     @staticmethod
     def json_schema():
@@ -158,15 +158,7 @@ def generate_test_data():
     """
     Generate content for database for testing
     """
-    p_0 = User(name="test", address="boboboaaa", email="boba", password="bob34")
+    p_0 = User(name="Bob", address="Bob street 420", email="bob@bob.mail.bob", password="bob34")
     DB.session.add(p_0)
     DB.session.commit()
-    p_1 = User(name="user", address="boboboccc", email="bobc", password="bob21")
-    DB.session.add(p_0)
-    DB.session.commit()
-    p_2 = User(name="bobi", address="bobobobbbb", email="bobb", password="bob12")
-    DB.session.add(p_0)
-    DB.session.add(p_1)
-    DB.session.add(p_2)
-    DB.session.commit()
-    print("bob")
+    print("Test generation succesful")
