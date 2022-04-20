@@ -98,7 +98,7 @@ def _check_control_get_href(ctrl, client, obj):
     assert resp.status_code == 200
 
 
-def _valid_recipe_json(version=0):
+def _valid_recipe_json(version=0, difficulty="hard"):
     """
     Returns a JSON object for POST and PUT to accept the schema
     """
@@ -106,9 +106,9 @@ def _valid_recipe_json(version=0):
         "recipe": {
             "name": f"Cake-Recipe-{version}",
             "description": f"Desc of Cake-Recipe-{version}",
-            "difficulty": "hard",
+            "difficulty": f"{difficulty}",
         },
-        "ingredients": [{"name": "Ingredient"}],
+        "ingredients": [{"name": "Ingredient", "unit": "kolpakko", "amount": 1}],
     }
 
 
@@ -119,7 +119,7 @@ def _valid_recipe_barebones():
     return {"name": "Cake", "description": "Normal cake I guess"}
 
 
-def _invalid_recipe_json(version=0):
+def _invalid_recipe_json(version=0, difficulty="hard"):
     """
     Returns a JSON object for POST and PUT to accept the schema
     """
@@ -127,17 +127,41 @@ def _invalid_recipe_json(version=0):
         "recipe": {
             "name": f"Cake-Recipe-{version}",
             "description": f"Desc of Cake-Recipe-{version}",
-            "difficulty": "hard",
+            "difficulty": f"{difficulty}",
         },
         "ingredients": [{"nameeeee": f"Ingredient-{version}"}],
     }
 
 
-def _valid_user_json(name="", email="", password=""):
+def _valid_user_json(name="", email="", password="", address="delfingatan"):
     """
     Returns User json to check schema
     """
-    return {"name": f"{name}", "email": f"{email}", "password": f"{password}"}
+    return {
+        "name": f"{name}",
+        "email": f"{email}",
+        "address": address,
+        "password": f"{password}",
+    }
+
+
+def _invalid_user_json(name="Bobb", email="bobobobob", password="boobboboob"):
+    """
+    Returns invalid User json to check schema
+    """
+    return {"nameeee": f"{name}", "email": f"{email}", "password": f"{password}"}
+
+
+def _invalid_user_address_json(name="Bobb", email="bobobobob", password="boobboboob"):
+    """
+    Returns invalid User json to check schema
+    """
+    return {
+        "name": f"{name}",
+        "email": f"{email}",
+        "password": f"{password}",
+        "addresss": "moi",
+    }
 
 
 def _valid_recipe_put(name=""):
@@ -334,3 +358,298 @@ class TestIngredientItem(object):
 
         resp = db_handle.put(self.RESOURCE_URL, json=invalid_recipe)
         assert resp.status_code == 404
+
+
+class TestRecipeCollection(object):
+    """
+    Test RecipeCollection methods and return values
+    """
+
+    RESOURCE_URL = "/api/users/Bob/recipes/"
+
+    def test_get_recipe_collection(self, db_handle):
+        """
+        Test GET from recipes
+        """
+        # First GET is empty because Bob has no recipes
+        resp = db_handle.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert len(body["items"]) == 0
+
+        # Add Bob a recipe
+        resp = db_handle.post(self.RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 201
+
+        # GET again to get recipe list for Bob
+        resp = db_handle.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert len(body["items"]) == 1
+
+    def test_post_ingredient_collection(self, db_handle):
+        """
+        Test posting valid recipe to app
+        """
+
+        # Add Bob a recipe with wrong content Type
+        resp = db_handle.post(self.RESOURCE_URL, data=_valid_recipe_json())
+        assert resp.status_code == 415
+
+        # Validation Error with invalid Recipe
+        resp = db_handle.post(self.RESOURCE_URL, json=_invalid_recipe_json())
+        assert resp.status_code == 400
+
+        # Add Bob a recipe
+        resp = db_handle.post(self.RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 201
+
+        # Add Bob a recipe again to produce duplicate
+        resp = db_handle.post(self.RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 409
+
+        # Add Bob a recipe with no proper difficulty
+        resp = db_handle.post(
+            self.RESOURCE_URL, json=_valid_recipe_json(version=1, difficulty="no-match")
+        )
+        assert resp.status_code == 201
+
+
+class TestRecipeItem(object):
+    """Test RecipeItem methods"""
+
+    RECIPE_RESOURCE_URL = "/api/users/Bob/recipes/"
+
+    RESOURCE_URL = "/api/users/Bob/recipes/Cake-Recipe-0/"
+    RESOURCE_URL_CAKE = "/api/recipes/Cake-Recipe-1/"
+    INVALID_RESOURCE_URL = "/api/users/Bob/recipes/Cake-Recipe-999/"
+
+    def test_get_recipeitem(self, db_handle):
+        """
+        Test GET for single ingredient
+        """
+        # Add Bob a recipe
+        resp = db_handle.post(self.RECIPE_RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 201
+        resp = db_handle.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+
+    def test_get_nonexist_recipeitem(self, db_handle):
+        """
+        Test GET for single non-existent ingredient
+        """
+        resp = db_handle.get(self.INVALID_RESOURCE_URL)
+        assert resp.status_code == 404
+
+    def test_put_recipeitem(self, db_handle):
+        """
+        Test PUT for ingredient
+        """
+
+        resp = db_handle.put(self.INVALID_RESOURCE_URL, json=_valid_recipe_put())
+        assert resp.status_code == 404
+
+        resp = db_handle.put(self.RESOURCE_URL, data=_valid_recipe_put())
+        assert resp.status_code == 404
+
+        # Add Bob a recipe 1
+        resp = db_handle.post(self.RECIPE_RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 201
+
+        # Add Bob a recipe 2
+        resp = db_handle.post(
+            self.RECIPE_RESOURCE_URL, json=_valid_recipe_json(version=1)
+        )
+        assert resp.status_code == 201
+
+    def test_delete_recipeitem(self, db_handle):
+        """
+        Test DELETE for ingredient
+        """
+
+        # Add Bob a recipe 1
+        resp = db_handle.post(self.RECIPE_RESOURCE_URL, json=_valid_recipe_json())
+        assert resp.status_code == 201
+
+        resp = db_handle.delete(
+            self.INVALID_RESOURCE_URL, json=_valid_recipe_put("Cake-Recipe-999")
+        )
+        assert resp.status_code == 404
+
+        resp = db_handle.delete(
+            self.RESOURCE_URL, json=_valid_recipe_put("Cake-Recipe-0")
+        )
+        assert resp.status_code == 204
+
+
+class TestUserCollection(object):
+    """Test UserCollection"""
+
+    RESOURCE_URL = "/api/users/"
+
+    def test_get_user_collection(self, db_handle):
+        """
+        Test GET from users
+        """
+
+        # GET again to get userlist containing Bob
+        resp = db_handle.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+        body = json.loads(resp.data)
+        assert len(body["items"]) == 1
+
+    def test_post_user_collection(self, db_handle):
+        """
+        Test posting valid user to app
+        """
+
+        # Add Bob_1 with wrong content type
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            data=_valid_user_json(
+                name="Bob_1", email="bob@bobbista", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 415
+
+        # Validation Error with invalid Bob
+        resp = db_handle.post(self.RESOURCE_URL, json=_invalid_user_json())
+        assert resp.status_code == 400
+
+        # Add Bob_1
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 201
+
+        # Add Bob_1 again to produce duplicate
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 409
+
+        # Add Bob_1 with wrong address
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_112",
+                email="bob@bobbista1232",
+                password="bobbbiahoihoi2",
+                address=123,
+            ),
+        )
+        assert resp.status_code == 400
+
+        # Add Bob_1 with wrong address key
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            json=_invalid_user_address_json(),
+        )
+        assert resp.status_code == 400
+
+        # Add Bob_1 again to produce duplicate
+        resp = db_handle.post(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11223", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 409
+
+
+class TestUserItem(object):
+    """Test UserItem class methods"""
+
+    RESOURCE_URL = "/api/users/Bob/"
+    INVALID_RESOURCE_URL = "/api/users/Bobbi/"
+    USER_RESOURCE_URL = "/api/users/"
+
+    def test_get_user(self, db_handle):
+        """
+        Test GET for single user
+        """
+        # Add Bob a recipe
+        resp = db_handle.get(self.RESOURCE_URL)
+        assert resp.status_code == 200
+
+    def test_get_nonexist_user(self, db_handle):
+        """
+        Test GET for single non-existent user
+        """
+        resp = db_handle.get(self.INVALID_RESOURCE_URL)
+        assert resp.status_code == 404
+
+    def test_put_user(self, db_handle):
+        """
+        Test PUT for ingredient
+        """
+
+        resp = db_handle.put(
+            self.INVALID_RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11223", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 404
+
+        resp = db_handle.put(
+            self.RESOURCE_URL,
+            data=_valid_user_json(
+                name="Bob_11223", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 415
+
+        # Add Bob a recipe 1
+        resp = db_handle.post(
+            self.USER_RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11223", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 201
+
+        resp = db_handle.put(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11223", email="bob@bobbista123", password="bobbbiahoihoi"
+            ),
+        )
+        assert resp.status_code == 409
+
+        resp = db_handle.put(
+            self.RESOURCE_URL,
+            json=_invalid_user_json(),
+        )
+        assert resp.status_code == 400
+
+        resp = db_handle.put(
+            self.RESOURCE_URL,
+            json=_valid_user_json(
+                name="Bob_11223233",
+                email="bob@bobbista1233455",
+                password="bobbbiahoihoi232",
+            ),
+        )
+        assert resp.status_code == 204
+
+    def test_delete_user(self, db_handle):
+        """
+        Test DELETE for user
+        """
+
+        resp = db_handle.delete(
+            self.INVALID_RESOURCE_URL, json=_valid_recipe_put("Cake-Recipe-999")
+        )
+        assert resp.status_code == 404
+
+        resp = db_handle.delete(
+            self.RESOURCE_URL, json=_valid_recipe_put("Cake-Recipe-0")
+        )
+        assert resp.status_code == 204
