@@ -3,6 +3,7 @@ import os
 import sys
 import pytest
 import tempfile
+from jsonschema import validate, draft7_format_checker
 
 from sqlalchemy import event
 from sqlalchemy.engine import Engine
@@ -10,7 +11,7 @@ from sqlalchemy.engine import Engine
 SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 sys.path.append(os.path.dirname(SCRIPT_DIR))
 from cookbook import create_app, DB
-from cookbook.models import Recipe, Ingredient, Unit, User
+from cookbook.models import Recipe, Ingredient, Recipeingredient, Unit, User
 
 
 @event.listens_for(Engine, "connect")
@@ -24,6 +25,9 @@ def set_sqlite_pragma(dbapi_connection, connection_record):
 def db_handle():
     db_fd, db_fname = tempfile.mkstemp()
     config = {"SQLALCHEMY_DATABASE_URI": "sqlite:///" + db_fname, "TESTING": True}
+
+    # First create_app() for checking deployment without config
+    app = create_app()
 
     app = create_app(config)
 
@@ -108,6 +112,13 @@ def _valid_recipe_json(version=0):
     }
 
 
+def _valid_recipe_barebones():
+    """
+    Returns a JSON object for testing the schema
+    """
+    return {"name": "Cake", "description": "Normal cake I guess"}
+
+
 def _invalid_recipe_json(version=0):
     """
     Returns a JSON object for POST and PUT to accept the schema
@@ -120,6 +131,13 @@ def _invalid_recipe_json(version=0):
         },
         "ingredients": [{"nameeeee": f"Ingredient-{version}"}],
     }
+
+
+def _valid_user_json(name="", email="", password=""):
+    """
+    Returns User json to check schema
+    """
+    return {"name": f"{name}", "email": f"{email}", "password": f"{password}"}
 
 
 def _valid_recipe_put(name=""):
@@ -136,11 +154,67 @@ def _invalid_recipe_put(name=""):
     return {"namee": f"{name}", "description": "This is modified"}
 
 
+def _valid_ingredient_json():
+    """Returns valid Recipeingredient JSON for schema validation"""
+    return {"name": "Lonkero_Original_Karpalo_5.5%", "unit": "kolpakko", "amount": 1}
+
+
+def _valid_unit_json():
+    """Return valid Unit JSON for schema validation"""
+    return {"name": "Tuoppi"}
+
+
+def test_schema_validation():
+    """Test validation for database schemas"""
+    validate(
+        _valid_user_json("Bob", "bob@bobmail.com", "bobword"),
+        User.json_schema(),
+        format_checker=draft7_format_checker,
+    )
+
+    validate(
+        _valid_recipe_barebones(),
+        Recipe.json_schema(),
+        format_checker=draft7_format_checker,
+    )
+
+    validate(
+        _valid_ingredient_json(),
+        Recipeingredient.json_schema(),
+        format_checker=draft7_format_checker,
+    )
+
+    validate(
+        _valid_unit_json(),
+        Unit.json_schema(),
+        format_checker=draft7_format_checker,
+    )
+
+
 def test_start_page(db_handle):
     """Tests first page"""
     RESOURCE_URL = "/api/"
     resp = db_handle.get(RESOURCE_URL)
     assert resp.status_code == 200
+
+
+def test_link_relations(db_handle):
+    """
+    Test link_relations_page
+    """
+    RESOURCE_URL = "cookbook/link-relations/"
+    resp = db_handle.get(RESOURCE_URL)
+    assert resp.status_code == 200
+
+
+def test_profile(db_handle):
+    """
+    Test profile page
+    """
+    RESOURCE_URL = "profiles/Bob/"
+    resp = db_handle.get(RESOURCE_URL)
+    assert resp.status_code == 200
+    assert "Bob" in str(resp.data)
 
 
 class TestIngredientCollection(object):
@@ -214,6 +288,7 @@ class TestIngredientItem(object):
         """
 
         valid_recipe = _valid_recipe_put("Flour")
+        valid_recipe_ing = _valid_recipe_put("Ingredient")
         invalid_recipe = _valid_recipe_put("ThisIsNotFound")
         invalid_schema = _invalid_recipe_put("Flour")
         valid_data = _valid_recipe_json()
@@ -232,6 +307,19 @@ class TestIngredientItem(object):
 
         resp = db_handle.put(self.RESOURCE_URL, json=invalid_schema)
         assert resp.status_code == 400
+
+        # Used for inserting existing Ingredient to the database
+        # And trying to change Flour to this Ingredient return 409 code
+        valid_data = _valid_recipe_json()
+        RESOURCE_URL_RECIPE = "/api/ingredients/"
+
+        resp = db_handle.post(RESOURCE_URL_RECIPE, json=valid_data)
+        assert resp.status_code == 201
+
+        # Validate the existing Ingredient and return 409 status code
+        # Since Flour cannot override existing Ingredient
+        resp = db_handle.put(self.RESOURCE_URL, json=valid_recipe_ing)
+        assert resp.status_code == 409
 
     def test_delete_ingredient(self, db_handle):
         """
