@@ -4,7 +4,7 @@ import json
 from flask import request, Response, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError, draft7_format_checker
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
 
@@ -48,7 +48,11 @@ class UserCollection(Resource):
                 415, "Not JSON", "Request content type must be JSON"
             )
         try:
-            validate(request.json, User.json_schema())
+            validate(
+                request.json,
+                User.json_schema(),
+                format_checker=draft7_format_checker,
+            )
         except ValidationError as e_msg:
             return create_error_response(400, "Invalid JSON", str(e_msg))
         try:
@@ -60,9 +64,9 @@ class UserCollection(Resource):
             u_email = request.json["email"]
             u_password = request.json["password"]
             if (
-                not isinstance(u_address, str)
-                or not isinstance(u_email, str)
-                or not isinstance(u_password, str)
+                    not isinstance(u_address, str)
+                    or not isinstance(u_email, str)
+                    or not isinstance(u_password, str)
             ):
                 return create_error_response(400, "Invalid values")
         except KeyError:

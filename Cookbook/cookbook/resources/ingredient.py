@@ -1,8 +1,8 @@
 """Methods for ingredients"""
 
 import json
-from flask import request, Response, url_for
 from flask_restful import Resource
+from flask import request, Response, url_for
 from sqlalchemy.exc import IntegrityError
 from jsonschema import validate, ValidationError, draft7_format_checker
 from werkzeug.exceptions import NotFound

@@ -67,28 +67,28 @@ class RecipeCollection(Resource):
                 )
         except ValidationError as e_msg:
             return create_error_response(400, "Invalid JSON", str(e_msg))
-        try:
-            p_name = request.json["recipe"]["name"]
-            recipe_name = Recipe.query.filter_by(name=p_name).first()
-            if recipe_name:
-                return create_error_response(409, "ON JO", "Duplicate 🥝")
-            p_desc = request.json["recipe"]["description"]
-            if not isinstance(p_desc, str):
-                return create_error_response(400, "Invalid values")
-            p_diff = request.json["recipe"].get("difficulty", "undefined")
-            if p_diff not in DIFFICULTIES:
-                p_diff = "undefined"
-        except KeyError:
-            return create_error_response(400, "KeyError", "SOS")
+        #        try:
+        p_name = request.json["recipe"]["name"]
+        recipe_name = Recipe.query.filter_by(name=p_name).first()
+        if recipe_name:
+            return create_error_response(409, "ON JO", "Duplicate 🥝")
+        p_desc = request.json["recipe"]["description"]
+        #            if not isinstance(p_desc, str):
+        #                return create_error_response(400, "Invalid values")
+        p_diff = request.json["recipe"].get("difficulty", "undefined")
+        if p_diff not in DIFFICULTIES:
+            p_diff = "undefined"
+        #        except KeyError:
+        #            return create_error_response(400, "KeyError", "SOS")
 
-        try:
-            new_recipe = Recipe(
-                name=p_name, description=p_desc, difficulty=p_diff, user_id=user.id
-            )
-            DB.session.add(new_recipe)
-            DB.session.commit()
-        except IntegrityError:
-            return create_error_response(409, "Duplicate", "Database error")
+        #        try:
+        new_recipe = Recipe(
+            name=p_name, description=p_desc, difficulty=p_diff, user_id=user.id
+        )
+        DB.session.add(new_recipe)
+        DB.session.commit()
+        #        except IntegrityError:
+        #            return create_error_response(409, "Duplicate", "Database error")
 
         recipe = DB.session.query(Recipe).filter_by(name=p_name).first()
 
@@ -97,18 +97,18 @@ class RecipeCollection(Resource):
             ing_id = search_models(ingredient["name"], Ingredient)
             ing_unit = search_models(ingredient["unit"], Unit)
             ing_amount = ingredient["amount"]
-            try:
-                new_ingredient = Recipeingredient(
-                    id=recipe_id,
-                    ingredient_id=ing_id,
-                    amount=ing_amount,
-                    unit_id=ing_unit,
-                )
-                DB.session.add(new_ingredient)
-                DB.session.commit()
-            except IntegrityError:
-                DB.session.rollback()
-                return create_error_response(409, "Duplicate", "Database error")
+            #            try:
+            new_ingredient = Recipeingredient(
+                id=recipe_id,
+                ingredient_id=ing_id,
+                amount=ing_amount,
+                unit_id=ing_unit,
+            )
+            DB.session.add(new_ingredient)
+            DB.session.commit()
+        #            except IntegrityError:
+        #                DB.session.rollback()
+        #                return create_error_response(409, "Duplicate", "Database error")
 
         return Response(
             status=201,
@@ -158,7 +158,7 @@ class RecipeItem(Resource):
 
         return Response(json.dumps(data), status=200, mimetype=MASON)
 
-    def put(self, recipe):
+    def put(self, recipe, user):
         """Put method functionality for Recipeitem"""
         recipe_item = DB.session.query(Recipe).filter_by(name=recipe.name).first()
         if not recipe_item:
@@ -178,7 +178,7 @@ class RecipeItem(Resource):
             return create_error_response(status_code=409, title="Taken")
         return Response(status=204, mimetype=MASON)
 
-    def delete(self, recipe):
+    def delete(self, recipe, user):
         """Delete method functionality for Recipeitem"""
         recipe_h = DB.session.query(Recipe).filter_by(name=recipe.name).first()
         if not recipe_h:

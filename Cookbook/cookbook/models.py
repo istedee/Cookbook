@@ -158,7 +158,9 @@ def generate_test_data():
     """
     Generate content for database for testing
     """
-    p_0 = User(name="Bob", address="Bob street 420", email="bob@bob.mail.bob", password="bob34")
+    p_0 = User(
+        name="Bob", address="Bob street 420", email="bob@bob.mail.bob", password="bob34"
+    )
     DB.session.add(p_0)
     DB.session.commit()
     print("Test generation succesful")
