@@ -179,13 +179,15 @@ def recipe_menu(name):
 
 def main():
     """Loop the main menu."""
-    ###LOANED FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
+    ###LOANED PARTLY FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
     ###, https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/###
     with requests.Session() as ses:
         ses.headers.update({"Accept": "application/vnd.mason+json"})
-        resp = ses.get(API_URL + "/api/")
-        if resp.status_code != 200:
-            print("Unable to access API")
+        try:
+            resp = ses.get(API_URL + "/api/")
+        except requests.exceptions.ConnectionError:
+            print("Unable to access API, maybe the API has not been initialized?")
+            return
         else:
             body = resp.json()
             users_href = body["@controls"]["cookbook:users-all"]["href"]
