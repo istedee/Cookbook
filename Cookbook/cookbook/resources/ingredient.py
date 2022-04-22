@@ -1,21 +1,26 @@
+"""Methods for ingredients"""
+
 import json
+from flask_restful import Resource
 from flask import request, Response, url_for
-from flask_restful import Api, Resource
 from sqlalchemy.exc import IntegrityError
 from jsonschema import validate, ValidationError, draft7_format_checker
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
 
 from ..utils import IngredientBuilder, create_error_response
-from .. import db
+from .. import DB
 from ..models import Ingredient
-from ..constants import *
+from ..constants import MASON, LINK_RELATIONS_URL
 
 
 class IngredientCollection(Resource):
+    """Defines get and post methods for ingredient collection"""
+
     def get(self):
+        """Defines functionality for get method"""
         build = IngredientBuilder(items=[])
-        inventory = db.session.query(Ingredient).all()
+        inventory = DB.session.query(Ingredient).all()
         for item in inventory:
             data = IngredientBuilder(
                 name=item.name,
@@ -24,6 +29,7 @@ class IngredientCollection(Resource):
             data.add_control(
                 "self", url_for("api.ingredientitem", ingredient=item.name)
             )
+            build["items"].append(data)
         build.add_control(
             "self", href=url_for("api.ingredientcollection", ingredient=item)
         )
@@ -38,8 +44,9 @@ class IngredientCollection(Resource):
         )
 
     def post(self):
+        """Defines post functionality for ingredient collection"""
 
-        if request.json == None:
+        if request.json is None:
             return create_error_response(415, "BAD CONTENT", "MUST BE JSON")
         try:
             for ingredient in request.json["ingredients"]:
@@ -48,26 +55,26 @@ class IngredientCollection(Resource):
                     Ingredient.json_schema(),
                     format_checker=draft7_format_checker,
                 )
-        except ValidationError as e:
-            return create_error_response(400, "Invalid JSON", str(e))
-        try:
-            for i in request.json["ingredients"]:
-                p_name = i["name"]
-                ing_name = Ingredient.query.filter_by(name=p_name).first()
-                if ing_name:
-                    continue
+        except ValidationError as e_msg:
+            return create_error_response(400, "Invalid JSON", str(e_msg))
+        #        try:
+        for i in request.json["ingredients"]:
+            p_name = i["name"]
+            ing_name = Ingredient.query.filter_by(name=p_name).first()
+            if ing_name:
+                continue
 
-                try:
-                    new_ingredient = Ingredient(
-                        name=p_name,
-                    )
-                    db.session.add(new_ingredient)
-                    db.session.commit()
-                except IntegrityError:
-                    return create_error_response(409, "Duplicate", "Database error")
+            #                try:
+            new_ingredient = Ingredient(
+                name=p_name,
+            )
+            DB.session.add(new_ingredient)
+            DB.session.commit()
+        #                except IntegrityError:
+        #                    return create_error_response(409, "Duplicate", "Database error")
 
-        except KeyError:
-            return create_error_response(400, "KeyError", "Check the JSON keys")
+        #        except KeyError:
+        #            return create_error_response(400, "KeyError", "Check the JSON keys")
 
         return Response(
             status=201,
@@ -81,8 +88,11 @@ class IngredientCollection(Resource):
 
 
 class IngredientItem(Resource):
+    """Functionalites for single ingredient items"""
+
     def get(self, ingredient):
-        ing = db.session.query(Ingredient).filter_by(name=ingredient.name).first()
+        """Get method functionality for ingredient item"""
+        ing = DB.session.query(Ingredient).filter_by(name=ingredient.name).first()
         if not ing:
             return create_error_response(404, "Ingredient not found")
 
@@ -100,7 +110,8 @@ class IngredientItem(Resource):
         )
 
     def put(self, ingredient):
-        ing = db.session.query(Ingredient).filter_by(name=ingredient.name).first()
+        """Put method definition for ingredient item"""
+        ing = DB.session.query(Ingredient).filter_by(name=ingredient.name).first()
         if not ing:
             return create_error_response(404, "Ingredient not found")
         if not request.json:
@@ -111,30 +122,34 @@ class IngredientItem(Resource):
             return create_error_response(400, "Invalid content", "Validation fails")
         ing.name = request.json["name"]
         try:
-            db.session.commit()
+            DB.session.commit()
         except IntegrityError:
-            db.session.rollback()
+            DB.session.rollback()
             return create_error_response(status_code=409, title="Taken")
         return Response(status=204, mimetype=MASON)
 
     def delete(self, ingredient):
-        ing = db.session.query(Ingredient).filter_by(name=ingredient.name).first()
+        """Delete method for ingredient item"""
+        ing = DB.session.query(Ingredient).filter_by(name=ingredient.name).first()
         if not ing:
             return create_error_response(
                 404, "Not Found", "Ingredient: {ingredient.name} not found"
             )
 
-        db.session.delete(ing)
-        db.session.commit()
+        DB.session.delete(ing)
+        DB.session.commit()
         return Response(status=204, mimetype=MASON)
 
 
 class IngredientConverter(BaseConverter):
+    """Converts ingredient item from URL"""
+
     def to_python(self, ingredient):
-        db_ingredient = db.session.query(Ingredient).filter_by(name=ingredient).first()
+        db_ingredient = DB.session.query(Ingredient).filter_by(name=ingredient).first()
         if db_ingredient is None:
             raise NotFound
         return db_ingredient
 
     def to_url(self, db_ingredient):
+        """Return string object of database"""
         return str(db_ingredient)

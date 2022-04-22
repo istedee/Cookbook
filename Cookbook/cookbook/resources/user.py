@@ -1,26 +1,34 @@
+"""Methods for Usercollection"""
+
 import json
 from flask import request, Response, url_for
 from flask_restful import Resource
 from sqlalchemy.exc import IntegrityError
-from jsonschema import validate, ValidationError
+from jsonschema import validate, ValidationError, draft7_format_checker
 from werkzeug.exceptions import NotFound
 from werkzeug.routing import BaseConverter
 
 from ..utils import create_error_response, RecipeBuilder
-from .. import db
+from .. import DB
 from ..models import User
-from ..constants import *
+from ..constants import MASON, USER_PROFILE, LINK_RELATIONS_URL
 
 
 class UserCollection(Resource):
+    """Methods for Usercollection access"""
+
     def get(self):
+        """Get method functionality for Usercollection"""
         body = RecipeBuilder(items=[])
-        users = db.session.query(User).all()
-        for u in users:
+        users = DB.session.query(User).all()
+        for user in users:
             data = RecipeBuilder(
-                name=u.name, address=u.address, email=u.email, password=u.password
+                name=user.name,
+                address=user.address,
+                email=user.email,
+                password=user.password,
             )
-            data.add_control("self", url_for("api.useritem", user=u.name))
+            data.add_control("self", url_for("api.useritem", user=user.name))
             data.add_control("profile", USER_PROFILE)
             body["items"].append(data)
         body.add_control("self", href=url_for("api.usercollection"))
@@ -34,14 +42,19 @@ class UserCollection(Resource):
         )
 
     def post(self):
+        """Post method functionality for Usercollection"""
         if not request.json:
             return create_error_response(
                 415, "Not JSON", "Request content type must be JSON"
             )
         try:
-            validate(request.json, User.json_schema())
-        except ValidationError as e:
-            return create_error_response(400, "Invalid JSON", str(e))
+            validate(
+                request.json,
+                User.json_schema(),
+                format_checker=draft7_format_checker,
+            )
+        except ValidationError as e_msg:
+            return create_error_response(400, "Invalid JSON", str(e_msg))
         try:
             u_name = request.json["name"]
             user_i = User.query.filter_by(name=u_name).first()
@@ -51,9 +64,9 @@ class UserCollection(Resource):
             u_email = request.json["email"]
             u_password = request.json["password"]
             if (
-                not isinstance(u_address, str)
-                or not isinstance(u_email, str)
-                or not isinstance(u_password, str)
+                    not isinstance(u_address, str)
+                    or not isinstance(u_email, str)
+                    or not isinstance(u_password, str)
             ):
                 return create_error_response(400, "Invalid values")
         except KeyError:
@@ -62,8 +75,8 @@ class UserCollection(Resource):
             new_user = User(
                 name=u_name, address=u_address, email=u_email, password=u_password
             )
-            db.session.add(new_user)
-            db.session.commit()
+            DB.session.add(new_user)
+            DB.session.commit()
         except IntegrityError:
             return create_error_response(409, "Duplicate", "Database error")
 
@@ -75,8 +88,11 @@ class UserCollection(Resource):
 
 
 class UserItem(Resource):
+    """Useritem access methods"""
+
     def get(self, user):
-        user_i = db.session.query(User).filter_by(name=user.name).first()
+        """Get method functionality for Useritem"""
+        user_i = DB.session.query(User).filter_by(name=user.name).first()
         if not user_i:
             return create_error_response(404, "User not found")
 
@@ -103,7 +119,8 @@ class UserItem(Resource):
         )
 
     def put(self, user):
-        user_i = db.session.query(User).filter_by(name=user.name).first()
+        """Put method functionality for Useritem"""
+        user_i = DB.session.query(User).filter_by(name=user.name).first()
         if not user_i:
             return create_error_response(404, "User not found")
         if not request.json:
@@ -117,28 +134,33 @@ class UserItem(Resource):
         user_i.email = request.json["email"]
         user_i.password = request.json["password"]
         try:
-            db.session.commit()
+            DB.session.commit()
         except IntegrityError:
-            db.session.rollback()
+            DB.session.rollback()
             return create_error_response(status_code=409, title="Taken")
         return Response(status=204, mimetype=MASON)
 
     def delete(self, user):
-        user_i = db.session.query(User).filter_by(name=user.name).first()
+        """Delete method for Useritem"""
+        user_i = DB.session.query(User).filter_by(name=user.name).first()
         if not user_i:
             return create_error_response(404, "Not Found", "User not found")
 
-        db.session.delete(user_i)
-        db.session.commit()
+        DB.session.delete(user_i)
+        DB.session.commit()
         return Response(status=204, mimetype=MASON)
 
 
 class UserConverter(BaseConverter):
+    """Converts User to suitable form"""
+
     def to_python(self, user):
-        db_user = db.session.query(User).filter_by(name=user).first()
+        """Converts user from URL to object"""
+        db_user = DB.session.query(User).filter_by(name=user).first()
         if db_user is None:
             raise NotFound
         return db_user
 
     def to_url(self, db_user):
+        """Converts object to URL"""
         return str(db_user)

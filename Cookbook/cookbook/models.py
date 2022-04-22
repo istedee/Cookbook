@@ -1,11 +1,19 @@
+"""
+Contains database models
+"""
+
 import click
 from flask.cli import with_appcontext
-from sqlalchemy import Column, Integer, String, ForeignKey, Float
+from sqlalchemy import Column, Integer, String, ForeignKey
 from sqlalchemy.orm import relationship, backref
-from . import db
+from . import DB
 
 
-class User(db.Model):
+class User(DB.Model):
+    """
+    User database model
+    """
+
     __tablename__ = "user"
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=False, nullable=False)
@@ -13,8 +21,8 @@ class User(db.Model):
     email = Column(String(100), nullable=False, unique=True)
     password = Column(String(100), nullable=False)
 
-    def __repr__(self):
-        return "<User {}\n,email={}\n>".format(self.name, self.email)
+    #    def __repr__(self):
+    #        return "<User {}\n,email={}\n>".format(self.name, self.email)
 
     @staticmethod
     def json_schema():
@@ -27,7 +35,11 @@ class User(db.Model):
         return schema
 
 
-class Recipeingredient(db.Model):
+class Recipeingredient(DB.Model):
+    """
+    Recipes ingredient database model
+    """
+
     __tablename__ = "recipeingredient"
     id = Column(Integer, ForeignKey("recipe.id"), primary_key=True)
     ingredient_id = Column(Integer, ForeignKey("ingredient.id"), primary_key=True)
@@ -35,26 +47,39 @@ class Recipeingredient(db.Model):
     unit_id = Column(Integer, ForeignKey("unit.id"), primary_key=True)
 
     recipe_rel = relationship(
-        "Recipe", backref=backref("recipeingredients", cascade="all, delete-orphan")
+        "Recipe",
+        backref=backref("recipeingredients", cascade="all, delete-orphan"),
     )
     ingredient = relationship(
-        "Ingredient", backref=backref("recipeingredients", cascade="all, delete-orphan")
+        "Ingredient",
+        backref=backref("recipeingredients", cascade="all, delete-orphan"),
     )
     unit = relationship(
-        "Unit", backref=backref("recipeingredients", cascade="all, delete-orphan")
+        "Unit",
+        backref=backref("recipeingredients", cascade="all, delete-orphan"),
     )
 
     @staticmethod
     def json_schema():
+        """
+        Define the JSON schema for database model
+        """
         schema = {"type": "object", "required": ["name", "amount", "unit"]}
         props = schema["properties"] = {}
         props["name"] = {"description": "Ingredients ID", "type": "string"}
-        props["amount"] = {"description": "Amount of ingredient", "type": "number"}
+        props["amount"] = {
+            "description": "Amount of ingredient",
+            "type": "number",
+        }
         props["unit"] = {"description": "Ingredients unit", "type": "string"}
         return schema
 
 
-class Recipe(db.Model):
+class Recipe(DB.Model):
+    """
+    Recipe database model
+    """
+
     __tablename__ = "recipe"
     id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey("user.id"))
@@ -66,6 +91,9 @@ class Recipe(db.Model):
 
     @staticmethod
     def json_schema():
+        """
+        Define the JSON schema for database model
+        """
         schema = {"type": "object", "required": ["name", "description"]}
         props = schema["properties"] = {}
         props["name"] = {"description": "Name of the recipe", "type": "string"}
@@ -76,7 +104,11 @@ class Recipe(db.Model):
         return schema
 
 
-class Ingredient(db.Model):
+class Ingredient(DB.Model):
+    """
+    Ingredient database model
+    """
+
     __tablename__ = "ingredient"
     id = Column(Integer, primary_key=True)
     name = Column(String(100), unique=True, nullable=False)
@@ -90,7 +122,11 @@ class Ingredient(db.Model):
         return schema
 
 
-class Unit(db.Model):
+class Unit(DB.Model):
+    """
+    Unit database model
+    """
+
     __tablename__ = "unit"
     id = Column(Integer, primary_key=True)
     name = Column(String(30), nullable=False)
@@ -109,23 +145,22 @@ class Unit(db.Model):
 def init_db_command():
     """
     Makes 'flask init-db' possible from command line. Initializes DB by
-    creating the tables. Example from https://github.com/enkwolf/pwp-course-sensorhub-api-example/blob/master/sensorhub/models.py
+    creating the tables.
+    Example from:
+    https://github.com/enkwolf/pwp-course-sensorhub-api-example/blob/master/sensorhub/models.py
     """
-    db.create_all()
+    DB.create_all()
 
 
 @click.command("testgen")
 @with_appcontext
 def generate_test_data():
-    p = User(name="test", address="boboboaaa", email="boba", password="bob34")
-    db.session.add(p)
-    db.session.commit()
-    p1 = User(name="user", address="boboboccc", email="bobc", password="bob21")
-    db.session.add(p)
-    db.session.commit()
-    p2 = User(name="bobi", address="bobobobbbb", email="bobb", password="bob12")
-    db.session.add(p)
-    db.session.add(p1)
-    db.session.add(p2)
-    db.session.commit()
-    print("bob")
+    """
+    Generate content for database for testing
+    """
+    p_0 = User(
+        name="Bob", address="Bob street 420", email="bob@bob.mail.bob", password="bob34"
+    )
+    DB.session.add(p_0)
+    DB.session.commit()
+    print("Test generation succesful")
