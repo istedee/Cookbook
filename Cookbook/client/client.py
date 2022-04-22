@@ -1,6 +1,7 @@
 """Cookbook client for the api where users can create and store recipes."""
-import requests
+
 import json
+import requests
 
 from pick import pick
 
@@ -42,7 +43,6 @@ def list_users(href):
         print("address: "+str(item["address"]))
         print("-------------------------\n")
     input("press ENTER to exit\n")
-    return
 
 def delete_user(href):
     """Delete given user from API."""
@@ -95,11 +95,13 @@ def add_recipe(href):
         body["recipe"]["difficulty"] = input("Give difficulty for recipe (easy, medium, hard): ")
         if not body["recipe"]["difficulty"]:
             continue
-        amount = int(input("How many ingredients the recipe has?: "))
-        if type(amount) != int:
+        try:
+            amount = int(input("How many ingredients the recipe has?: "))
+        except ValueError:
+            print("Amount must be integer!")
             continue
         ingredients = []
-        for i in range(amount):
+        for _ in range(amount):
             data = {}
             data["name"] = input("Give ingredient name: ")
             data["unit"] = input("Give an unit of measurement (e.g. ml, dl, cup): ")
@@ -137,13 +139,12 @@ def get_recipe(href):
     print("description: "+str(body["description"]))
     print("difficulty: "+str(body["difficulty"]))
     print("\ningredients:\n")
-    for i, j in enumerate(body["ingredients"]["items"]):
+    for i, _ in enumerate(body["ingredients"]["items"]):
         print("    "+body["ingredients"]["items"][i]["name"],
          body["ingredients"]["items"][i]["amount"],
          body["ingredients"]["items"][i]["unit"])
     print("-------------------------\n")
     input("press ENTER to exit\n")
-    return
 
 
 def delete_recipe(href):
@@ -181,9 +182,9 @@ def recipe_menu(name):
 def main():
     """Loop the main menu."""
     ###LOANED FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
-    with requests.Session() as s:
-        s.headers.update({"Accept": "application/vnd.mason+json"})
-        resp = s.get(API_URL + "/api/")
+    with requests.Session() as ses:
+        ses.headers.update({"Accept": "application/vnd.mason+json"})
+        resp = ses.get(API_URL + "/api/")
         if resp.status_code != 200:
             print("Unable to access API")
         else:
