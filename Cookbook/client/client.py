@@ -1,7 +1,5 @@
-from select import select
-from unicodedata import name
+"""Cookbook client for the api where users can create and store recipes."""
 import requests
-import time
 import json
 
 from pick import pick
@@ -9,6 +7,7 @@ from pick import pick
 API_URL = "http://127.0.0.1:5000"
 
 def add_user(href):
+    """Add a user in the client."""
     body = {}
     while True:
         print("Give name for user: ")
@@ -84,6 +83,7 @@ def all_recipes(href, name):
     return
 
 def add_recipe(href):
+    """Add a new recipe for the user."""
     body = {"recipe": {}}
     while True:
         body["recipe"]["name"] = input("Give name for recipe: ")
@@ -151,6 +151,7 @@ def delete_recipe(href):
     return requests.delete(API_URL + href)
 
 def recipe_menu(name):
+    """Show menu for user where you can do recipe-actions."""
     recipes_href = requests.get(API_URL + name[1]).json()["@controls"]["user-recipes"]["href"]
     while True:
         title = f"{name[0]}'s cookbook"
@@ -178,6 +179,7 @@ def recipe_menu(name):
             return
 
 def main():
+    """Loop the main menu."""
     ###LOANED FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
     with requests.Session() as s:
         s.headers.update({"Accept": "application/vnd.mason+json"})
@@ -217,4 +219,4 @@ if __name__ == "__main__":
     try:
         main()
     except KeyboardInterrupt:
-        print("K'bye")
+        print("Bye!")
