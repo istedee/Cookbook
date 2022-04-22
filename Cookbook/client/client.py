@@ -56,8 +56,6 @@ def select_user(href):
         body = resp.json()
         options = [item["name"] for item in body["items"]]
         options.append("cancel")
-        if not options:
-            break
         option, _ = pick(options, title)
         if option == "cancel":
             return None
@@ -120,10 +118,10 @@ def select_recipe(href):
         resp = requests.get(API_URL + href)
         body = resp.json()
         options = [item["name"] for item in body["items"]]
-        if not options:
-            break
+        options.append("cancel")
         option, _ = pick(options, title)
-
+        if option == "cancel":
+            return None
         title = "Choose action"
         if option:
             for i in body["items"]:
@@ -167,13 +165,13 @@ def recipe_menu(name):
         if option == "Inspect recipe":
             recipe_href = select_recipe(recipes_href)
             if recipe_href is None:
-                input("There are no recipes!\npress ENTER to exit\n")
+                input("No recipe selected!\npress ENTER to exit\n")
                 continue
             get_recipe(recipe_href)
         if option == "Delete recipe":
             recipe_href = select_recipe(recipes_href)
             if recipe_href is None:
-                input("There are no recipes!\npress ENTER to exit\n")
+                input("No recipe selected!\npress ENTER to exit\n")
                 continue
             delete_recipe(recipe_href)
         elif option == "Exit":
@@ -182,6 +180,7 @@ def recipe_menu(name):
 def main():
     """Loop the main menu."""
     ###LOANED FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
+    ###, https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/###
     with requests.Session() as ses:
         ses.headers.update({"Accept": "application/vnd.mason+json"})
         resp = ses.get(API_URL + "/api/")
@@ -193,7 +192,7 @@ def main():
     ###
     while True:
         title = "Select user to examine its cookbook,\
- you can also create new users and delete or check existing users."
+you can also create new users and delete or check existing users."
         options = ["User creation", "User selection", "User deletion", "List users", "Exit"]
         option, _ = pick(options, title)
         title = "Choose action"
