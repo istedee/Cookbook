@@ -1,3 +1,4 @@
+import json
 import os
 from flask import Flask, Response
 from flask_sqlalchemy import SQLAlchemy
@@ -56,6 +57,19 @@ def create_app(test_config=None):
 
     @app.route("/api/")
     def view():
-        return Response(status=200, response="BOB")
+        """Return api entrypoint."""
+        body = {
+            "@namespaces": {
+                "cookbook": {
+                    "name": "/cookbook/link-relations/"
+                }
+            },
+            "@controls": {
+                "cookbook:users-all": {
+                    "href": "/api/users/"
+                }
+            }
+        }
+        return Response(status=200, response=json.dumps(body, indent=2), mimetype=MASON)
 
     return app
