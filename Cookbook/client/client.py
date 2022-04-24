@@ -58,7 +58,7 @@ def select_user(href):
         options.append("cancel")
         option, _ = pick(options, title)
         if option == "cancel":
-            return None
+            return "canceled"
         if option:
             for i in body["items"]:
                 if option in i["name"]:
@@ -121,7 +121,7 @@ def select_recipe(href):
         options.append("cancel")
         option, _ = pick(options, title)
         if option == "cancel":
-            return None
+            return "canceled"
         title = "Choose action"
         if option:
             for i in body["items"]:
@@ -167,11 +167,15 @@ def recipe_menu(name):
             if recipe_href is None:
                 input("No recipe selected!\npress ENTER to exit\n")
                 continue
+            if recipe_href == "canceled":
+                continue
             get_recipe(recipe_href)
         if option == "Delete recipe":
             recipe_href = select_recipe(recipes_href)
             if recipe_href is None:
                 input("No recipe selected!\npress ENTER to exit\n")
+                continue
+            if recipe_href == "canceled":
                 continue
             delete_recipe(recipe_href)
         elif option == "Exit":
@@ -209,6 +213,8 @@ you can also create new users and delete or check existing users."
             if name is None:
                 input("No user selected!\npress ENTER to exit\n")
                 continue
+            if name == "canceled":
+                continue
             recipe_menu(name)
         elif option == "List users":
             list_users(users_href)
@@ -216,6 +222,8 @@ you can also create new users and delete or check existing users."
             name = select_user(users_href)
             if name is None:
                 input("No user selected!\npress ENTER to exit\n")
+                continue
+            if name == "canceled":
                 continue
             delete_user(name)
         elif option == "Exit":
