@@ -178,7 +178,7 @@ def recipe_menu(name):
             return
 
 def main():
-    """Loop the main menu."""
+    """Run the client."""
     ###LOANED PARTLY FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
     ###, https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/###
     with requests.Session() as ses:
@@ -192,6 +192,10 @@ def main():
             body = resp.json()
             users_href = body["@controls"]["cookbook:users-all"]["href"]
     ###
+    user_menu(users_href)
+
+def user_menu(users_href):
+    """Offer user-actions in the menu."""
     while True:
         title = "Select user to examine its cookbook,\
 you can also create new users and delete or check existing users."
