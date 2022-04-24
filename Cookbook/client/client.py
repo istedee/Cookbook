@@ -211,7 +211,7 @@ you can also create new users and delete or check existing users."
             delete_user(name)
         elif option == "Exit":
             break
-    
+
 def main():
     """Run the client."""
     ###LOANED PARTLY FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
