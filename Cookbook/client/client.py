@@ -181,23 +181,6 @@ def recipe_menu(name):
         elif option == "Exit":
             return
 
-def main():
-    """Run the client."""
-    ###LOANED PARTLY FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
-    ###, https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/###
-    with requests.Session() as ses:
-        ses.headers.update({"Accept": "application/vnd.mason+json"})
-        try:
-            resp = ses.get(API_URL + "/api/")
-        except requests.exceptions.ConnectionError:
-            print("Unable to access API, maybe the API has not been initialized?")
-            return
-        else:
-            body = resp.json()
-            users_href = body["@controls"]["cookbook:users-all"]["href"]
-    ###
-    user_menu(users_href)
-
 def user_menu(users_href):
     """Offer user-actions in the menu."""
     while True:
@@ -228,6 +211,23 @@ you can also create new users and delete or check existing users."
             delete_user(name)
         elif option == "Exit":
             break
+    
+def main():
+    """Run the client."""
+    ###LOANED PARTLY FROM LOVELACE EXEC 4 EXAMPE(how client starts interaction with API)###
+    ###, https://lovelace.oulu.fi/ohjelmoitava-web/ohjelmoitava-web/###
+    with requests.Session() as ses:
+        ses.headers.update({"Accept": "application/vnd.mason+json"})
+        try:
+            resp = ses.get(API_URL + "/api/")
+        except requests.exceptions.ConnectionError:
+            print("Unable to access API, maybe the API has not been initialized?")
+            return
+        else:
+            body = resp.json()
+            users_href = body["@controls"]["cookbook:users-all"]["href"]
+    ###
+    user_menu(users_href)
 
 if __name__ == "__main__":
     try:
