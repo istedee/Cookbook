@@ -66,6 +66,31 @@ def select_user(href):
                     href = i["@controls"]["self"]["href"]
             return name, href
 
+def edit_user(href):
+    "Edit the selected user"
+    body = {}
+    while True:
+        print("Give name for user: ")
+        body["name"] = input()
+        if not body["name"]:
+            continue
+        print("Give email for user: ")
+        body["email"] = input()
+        if not body["email"]:
+            continue
+        print("Give address for user: ")
+        body["address"] = input()
+        if not body["address"]:
+            continue
+        print("Give password for user: ")
+        body["password"] = input()
+        if not body["password"]:
+            continue
+        print("-------------------------\n")
+        return requests.put(API_URL + href[1], data=json.dumps(body),
+                            headers={"Content-type": "application/json"}
+        )
+
 def all_recipes(href, name):
     """List all recipes of the user."""
     resp = requests.get(API_URL + href)
@@ -186,7 +211,9 @@ def user_menu(users_href):
     while True:
         title = "Select user to examine its cookbook,\
 you can also create new users and delete or check existing users."
-        options = ["User creation", "User selection", "User deletion", "List users", "Exit"]
+        options = [
+            "User creation", "User selection", "User deletion", "Edit user", "List users", "Exit"
+            ]
         option, _ = pick(options, title)
         title = "Choose action"
         if option == "User creation":
@@ -209,6 +236,14 @@ you can also create new users and delete or check existing users."
             if name == "canceled":
                 continue
             delete_user(name)
+        elif option == "Edit user":
+            name = select_user(users_href)
+            if name is None:
+                input("No user selected!\npress ENTER to exit\n")
+                continue
+            if name == "canceled":
+                continue
+            edit_user(name)
         elif option == "Exit":
             break
 
